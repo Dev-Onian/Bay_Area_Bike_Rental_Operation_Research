@@ -4,10 +4,13 @@
 
 # 2. Perform an EDA on a copy of the data
 # a) Install tidyverse, funModeling, and Hmisc
-
+library(tidyverse)
+library(funModeling)
+library(Hmisc)
 
 # b) Examine data, make sure there is enough for suitable analysis, make sure everything is the right form
 
+RawStation <- read.csv("station.csv")
 
 # c) Clean a copy of the data, including removing outliers - note what was changed
 
