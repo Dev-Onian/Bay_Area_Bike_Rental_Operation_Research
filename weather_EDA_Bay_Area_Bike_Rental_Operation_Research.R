@@ -73,99 +73,48 @@ summary(CleanedWeather$date)
 summary(CleanedWeather$max_temperature_f)
 sd(CleanedWeather$max_temperature_f)
 plot(CleanedWeather$date,CleanedWeather$max_temperature_f)
-OutlierList <- data.frame(
-  Measurment = "max_temperature_f",
-  Date = CleanedWeather$date[which(CleanedWeather$max_temperature_f==boxplot.stats(CleanedWeather$max_temperature_f)$out)],
-  Value = boxplot.stats(CleanedWeather$max_temperature_f)$out
-)
 
 summary(CleanedWeather$mean_temperature_f)
 sd(CleanedWeather$mean_temperature_f)
 plot(CleanedWeather$date,CleanedWeather$mean_temperature_f)
-boxplot.stats(CleanedWeather$mean_temperature_f)$out
-if (length(boxplot.stats(CleanedWeather$mean_temperature_f)$out) !=0){
-OutlierList[nrow(OutlierList) + 1,] = list("mean_temperature_f",
-                                           which(CleanedWeather$mean_temperature_f==boxplot.stats(CleanedWeather$mean_temperature_f)$out),
-                                           boxplot.stats(CleanedWeather$mean_temperature_f)$out)
-}
 
 summary(CleanedWeather$min_temperature_f)
 sd(CleanedWeather$min_temperature_f)
 plot(CleanedWeather$date,CleanedWeather$min_temperature_f)
-boxplot.stats(CleanedWeather$min_temperature_f)$out
-if (length(boxplot.stats(CleanedWeather$min_temperature_f)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("min_temperature_f",
-                                             which(CleanedWeather$min_temperature_f==boxplot.stats(CleanedWeather$min_temperature_f)$out),
-                                             boxplot.stats(CleanedWeather$min_temperature_f)$out)
-}
-
 
 summary(CleanedWeather$max_visibility_miles)
 sd(CleanedWeather$max_visibility_miles)
 plot(CleanedWeather$date,CleanedWeather$max_visibility_miles)
-if (length(boxplot.stats(CleanedWeather$max_visibility_miles)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("max_visibility_miles",
-                                             which(CleanedWeather$max_visibility_miles==boxplot.stats(CleanedWeather$max_visibility_miles)$out),
-                                             boxplot.stats(CleanedWeather$max_visibility_miles)$out)
-}
 
 summary(CleanedWeather$mean_visibility_miles)
 sd(CleanedWeather$mean_visibility_miles)
 plot(CleanedWeather$date,CleanedWeather$mean_visibility_miles)
-if (length(boxplot.stats(CleanedWeather$mean_visibility_miles)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("mean_visibility_miles",
-                                             which(CleanedWeather$mean_visibility_miles==boxplot.stats(CleanedWeather$mean_visibility_miles)$out),
-                                             boxplot.stats(CleanedWeather$mean_visibility_miles)$out)
-}
 
 summary(CleanedWeather$min_visibility_miles)
 sd(CleanedWeather$min_visibility_miles)
 plot(CleanedWeather$date,CleanedWeather$min_visibility_miles)
-if (length(boxplot.stats(CleanedWeather$min_visibility_miles)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("min_visibility_miles",
-                                             which(CleanedWeather$min_visibility_miles==boxplot.stats(CleanedWeather$min_visibility_miles)$out),
-                                             boxplot.stats(CleanedWeather$min_visibility_miles)$out)
-}
 
 summary(CleanedWeather$max_wind_Speed_mph)
 sd(CleanedWeather$max_wind_Speed_mph)
 plot(CleanedWeather$date,CleanedWeather$max_wind_Speed_mph)
-if (length(boxplot.stats(CleanedWeather$max_wind_Speed_mph)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("max_wind_Speed_mph",
-                                             which(CleanedWeather$max_wind_Speed_mph==boxplot.stats(CleanedWeather$max_wind_Speed_mph)$out),
-                                             boxplot.stats(CleanedWeather$max_wind_Speed_mph)$out)
-}
 
 summary(CleanedWeather$mean_wind_speed_mph)
 sd(CleanedWeather$mean_wind_speed_mph)
 plot(CleanedWeather$date,CleanedWeather$mean_wind_speed_mph)
-if (length(boxplot.stats(CleanedWeather$mean_wind_speed_mph)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("mean_wind_speed_mph",
-                                             which(CleanedWeather$mean_wind_speed_mph==boxplot.stats(CleanedWeather$mean_wind_speed_mph)$out),
-                                             boxplot.stats(CleanedWeather$mean_wind_speed_mph)$out)
-}
 
 summary(CleanedWeather$max_gust_speed_mph)
 sd(CleanedWeather$max_gust_speed_mph)
 plot(CleanedWeather$date,CleanedWeather$max_gust_speed_mph)
-if (length(boxplot.stats(CleanedWeather$max_gust_speed_mph)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("max_gust_speed_mph",
-                                             which(CleanedWeather$max_gust_speed_mph==boxplot.stats(CleanedWeather$max_gust_speed_mph)$out),
-                                             boxplot.stats(CleanedWeather$max_gust_speed_mph)$out)
-}
 
 summary(CleanedWeather$precipitation_inches)
 sd(CleanedWeather$precipitation_inches)
 plot(CleanedWeather$date,CleanedWeather$precipitation_inches)
-if (length(boxplot.stats(CleanedWeather$precipitation_inches)$out) !=0){
-  OutlierList[nrow(OutlierList) + 1,] = list("precipitation_inches",
-                                             which(CleanedWeather$precipitation_inches==boxplot.stats(CleanedWeather$precipitation_inches)$out),
-                                             boxplot.stats(CleanedWeather$precipitation_inches)$out)
-}
 
 summary(CleanedWeather$cloud_cover)
 sd(CleanedWeather$cloud_cover)
 plot(CleanedWeather$date,CleanedWeather$cloud_cover)
+
+# All of the measurements are within the bounds of planet Earth, for example, the maximum wind speeds are far below the fastest wind speed recorded on Earth (408 km/h)
 
 # f) Analyze categorical and numerical variables at the same time: get a sense of all the variables to be analyzed
 
