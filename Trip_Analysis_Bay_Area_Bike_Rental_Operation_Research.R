@@ -4,6 +4,7 @@ library(funModeling)
 library(Hmisc)
 library(dplyr)
 library(lubridate)
+library(stringr)
 
 # Copy over the data cleaning steps of the EDA, leaving out the steps that analyzed and plotted the data
 RawWeather <- read.csv("weather.csv")
@@ -85,12 +86,15 @@ CleanedTrip <- CleanedTrip[-CancelledTripIndices,]
 
 CleanedTrip <- mutate(CleanedTrip, TripInterval = interval(start_date,end_date))
 
-ListOfTimes <- interval(strptime("00:00", format = "%H:%M",tz="UTC"),strptime("00:00", format = "%H:%M",tz="UTC") +(15*60))
-InitialTime1 <- strptime("00:00", format = "%H:%M",tz="UTC")
-InitialTime <- strptime("00:00", format = "%H:%M",tz="UTC")
+ListOfTimes <- interval(strptime("00:00", format = "%H:%M",tz="EST"),strptime("00:00", format = "%H:%M",tz="EST") +(15*60))
+InitialTime1 <- strptime("00:00", format = "%H:%M",tz="EST")
+InitialTime <- strptime("00:00", format = "%H:%M",tz="EST")
 for (i in 1:95){
   InitialTime <- InitialTime +(15*60)
   InitialInterval <- interval(InitialTime,InitialTime +(15*60))
+  
+  #cat(as.character(format(InitialTime,format='%H:%M')),"-",as.character(format(InitialTime+(15*60),format='%H:%M')))
+  
   ListOfTimes[i+1,]<-InitialInterval
 }
 
@@ -106,11 +110,18 @@ for (i in 1:95){
   NumberOfTrips = sum(int_overlaps(ListOfTimes[i+1],testshift))
   RushHours[i+1,] = list(Interval,NumberOfTrips)
 }
+RushHours$Interval <- str_remove_all(RushHours$Interval,"\\d{4}[-]\\d{2}[-]\\d{2}")
+RushHours$Interval <- str_remove_all(RushHours$Interval,"[:]\\d{2}[ ]")
+RushHours$Interval[1] <- "00:00EST--00:15EST"
+RushHours$Interval[96] <- "23:45EST--00:00EST"
 
+par(mar=c(6,4,4,1))
 barplot(RushHours$NumberOfTrips, names.arg=unlist(RushHours$Interval),las=2,
         ylab = "Number of Trips",
-        main = "Bike Usage Per Hour")
+        main = "Bike Usage Per Hour",
+        cex.names=0.5)
 
+RushHourTimes <-RushHours[which(RushHours$NumberOfTrips>=quantile(RushHours$NumberOfTrips,probs=0.8)),]
 
 # 6. Determine 10 most frequent starting and ending stations during rush hours
 
