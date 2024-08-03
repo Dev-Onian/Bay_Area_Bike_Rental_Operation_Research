@@ -3,6 +3,7 @@ library(tidyverse)
 library(funModeling)
 library(Hmisc)
 library(dplyr)
+library(lubridate)
 
 # Copy over the data cleaning steps of the EDA, leaving out the steps that analyzed and plotted the data
 RawWeather <- read.csv("weather.csv")
@@ -43,34 +44,33 @@ CleanedTrip$end_station_id <- factor(CleanedTrip$end_station_id)
 CleanedTrip$bike_id <- factor(CleanedTrip$bike_id)
 CleanedTrip$subscription_type <- factor(CleanedTrip$subscription_type)
 CleanedTrip$zip_code <- factor(CleanedTrip$zip_code)
-CleanedTrip$start_date <- strptime(RawTrip$start_date, format = "%m/%d/%Y %H:%M")
-CleanedTrip$end_date <- strptime(RawTrip$end_date, format = "%m/%d/%Y %H:%M")
+CleanedTrip$start_date <- strptime(RawTrip$start_date, format = "%m/%d/%Y %H:%M", tz="EST")
+CleanedTrip$end_date <- strptime(RawTrip$end_date, format = "%m/%d/%Y %H:%M", tz="EST")
 CleanedTrip <- mutate(CleanedTrip, TripDuration = (CleanedTrip$end_date-CleanedTrip$start_date))
-# The longest trip is ~200 days long
 
 # 3. Record trip IDs for outliers, and then remove them. What are the rules for outliers? Outside of 95% of the data? Or a different metric?
 
 boxplot(CleanedTrip$TripDuration,
-        ylab = "Duration"
+        ylab = "Duration (mins)"
 )
-# index 229947 makes it impossible to see the rest of the data. It is 287839 minutes, while the next longest duration is only 12007 minutes
+# index 229947 makes it impossible to see the rest of the data. It is 287839 minutes (~200 days long), while the next longest duration is only 12007 minutes (~8 days)
 boxplot(CleanedTrip$TripDuration[-229947],
-        ylab = "Duration"
+        ylab = "Duration (mins)"
 )
-# the 2nd longest trip is 8 days, which is technically possible given some bay area bikes can be rented out for a month - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
-# Though the long durations of the trips compared to the vast majority may make them extreme, possible values that may be beyond the purview of the analysis
+# the 2nd longest trip is 8 days, which is technically possible given some bay area bikes can be rented out for up to a month - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
+# Though the long durations of the trips compared to the vast majority may make them possible values, they may still be extreme and beyond the purview of the analysis
 
 TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(1440,units="mins"))
 TripDurationOutliers <- CleanedTrip[TripDurationOutlierIndices,]
 # 1440 minutes constitutes a full day of bike renting - Bay Area bike rental lengths usually go up to full-day or 24 hours (though there are some that can be rented on a weekly, or even monthly basis) - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
 boxplot(CleanedTrip$TripDuration[-TripDurationOutlierIndices],
-        ylab = "Duration"
+        ylab = "Duration (mins)"
 )
 
 TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTrip$TripDuration,probs=0.975)) #this will include the outliers as well
 TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
 boxplot(CleanedTrip$TripDuration[-TripDurationExtremeIndices],
-        ylab = "Duration"
+        ylab = "Duration (mins)"
 )
 
 CleanedTrip <- CleanedTrip[-TripDurationExtremeIndices,] #remove the outlier indices from the main cleaned dataframe
@@ -83,6 +83,33 @@ CleanedTrip <- CleanedTrip[-CancelledTripIndices,]
 
 # 5. Determine weekday rush hours - What consists of rush hour? Provide a definition. Histograms by hour are a good idea to test, or 15 minutes to be more precise. Lubridate will be useful for determining time intervals
 
+CleanedTrip <- mutate(CleanedTrip, TripInterval = interval(start_date,end_date))
+
+ListOfTimes <- interval(strptime("00:00", format = "%H:%M",tz="UTC"),strptime("00:00", format = "%H:%M",tz="UTC") +(15*60))
+InitialTime1 <- strptime("00:00", format = "%H:%M",tz="UTC")
+InitialTime <- strptime("00:00", format = "%H:%M",tz="UTC")
+for (i in 1:95){
+  InitialTime <- InitialTime +(15*60)
+  InitialInterval <- interval(InitialTime,InitialTime +(15*60))
+  ListOfTimes[i+1,]<-InitialInterval
+}
+
+testdif <- floor(as.numeric(difftime(InitialTime1,CleanedTrip$start_date, units="days")))
+testshift <- int_shift(CleanedTrip$TripInterval,duration(days=testdif+1))
+attr(testshift,"tzone") <- "EST"
+
+CleanedTrip <- mutate(CleanedTrip, ShiftedTripInterval = testshift)
+
+RushHours <- data.frame(Interval = as.character(ListOfTimes[1]), NumberOfTrips = sum(int_overlaps(ListOfTimes[1],testshift)))
+for (i in 1:95){
+  Interval = as.character(ListOfTimes[i+1])
+  NumberOfTrips = sum(int_overlaps(ListOfTimes[i+1],testshift))
+  RushHours[i+1,] = list(Interval,NumberOfTrips)
+}
+
+barplot(RushHours$NumberOfTrips, names.arg=unlist(RushHours$Interval),las=2,
+        ylab = "Number of Trips",
+        main = "Bike Usage Per Hour")
 
 
 # 6. Determine 10 most frequent starting and ending stations during rush hours
