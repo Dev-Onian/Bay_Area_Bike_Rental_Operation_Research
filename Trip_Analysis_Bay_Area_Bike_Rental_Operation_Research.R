@@ -92,9 +92,6 @@ InitialTime <- strptime("00:00", format = "%H:%M",tz="EST")
 for (i in 1:95){
   InitialTime <- InitialTime +(15*60)
   InitialInterval <- interval(InitialTime,InitialTime +(15*60))
-  
-  #cat(as.character(format(InitialTime,format='%H:%M')),"-",as.character(format(InitialTime+(15*60),format='%H:%M')))
-  
   ListOfTimes[i+1,]<-InitialInterval
 }
 
@@ -110,6 +107,11 @@ for (i in 1:95){
   NumberOfTrips = sum(int_overlaps(ListOfTimes[i+1],testshift))
   RushHours[i+1,] = list(Interval,NumberOfTrips)
 }
+
+RushHours <- cbind.data.frame(RushHours,POSIXInterval = ListOfTimes)
+
+RushHourTimes <-RushHours[which(RushHours$NumberOfTrips>=quantile(RushHours$NumberOfTrips,probs=0.8)),]
+
 RushHours$Interval <- str_remove_all(RushHours$Interval,"\\d{4}[-]\\d{2}[-]\\d{2}")
 RushHours$Interval <- str_remove_all(RushHours$Interval,"[:]\\d{2}[ ]")
 RushHours$Interval[1] <- "00:00EST--00:15EST"
@@ -118,14 +120,20 @@ RushHours$Interval[96] <- "23:45EST--00:00EST"
 par(mar=c(6,4,4,1))
 barplot(RushHours$NumberOfTrips, names.arg=unlist(RushHours$Interval),las=2,
         ylab = "Number of Trips",
-        main = "Bike Usage Per Hour",
+        main = "Bike Usage Stratified By Time",
         cex.names=0.5)
-
-RushHourTimes <-RushHours[which(RushHours$NumberOfTrips>=quantile(RushHours$NumberOfTrips,probs=0.8)),]
 
 # 6. Determine 10 most frequent starting and ending stations during rush hours
 
+RushHourTripIndices <- int_overlaps(RushHourTimes$POSIXInterval[1],CleanedTrip$ShiftedTripInterval)
+for (i in 1:nrow(RushHourTimes)){
+  RushHourTripIndices <- RushHourTripIndices + int_overlaps(RushHourTimes$POSIXInterval[i],CleanedTrip$ShiftedTripInterval)
+} #Get an index of every trip that occured during rush hour
 
+RushHourTrips <- CleanedTrip[RushHourTripIndices,]
+(RushHourTrips$start_station_name)
+TopRushHourStartingStations <- RushHourTrips %>% count(start_station_name,sort = TRUE)
+TopRushHourEndingStations <- RushHourTrips %>% count(end_station_name,sort = TRUE)
 
 # 7. Determine 10 most frequent starting and ending stations during the weekends
 
