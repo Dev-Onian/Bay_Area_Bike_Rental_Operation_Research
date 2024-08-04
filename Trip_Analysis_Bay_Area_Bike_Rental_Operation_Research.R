@@ -51,6 +51,7 @@ CleanedTrip <- mutate(CleanedTrip, TripDuration = (CleanedTrip$end_date-CleanedT
 
 # 3. Record trip IDs for outliers, and then remove them. What are the rules for outliers? Outside of 95% of the data? Or a different metric?
 
+# get a sense of what the trip duration data looks like
 boxplot(CleanedTrip$TripDuration,
         ylab = "Duration (mins)"
 )
@@ -61,6 +62,7 @@ boxplot(CleanedTrip$TripDuration[-229947],
 # the 2nd longest trip is 8 days, which is technically possible given some bay area bikes can be rented out for up to a month - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
 # Though the long durations of the trips compared to the vast majority may make them possible values, they may still be extreme and beyond the purview of the analysis
 
+# figure out which trips lasted longer than 1 day
 TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(1440,units="mins"))
 TripDurationOutliers <- CleanedTrip[TripDurationOutlierIndices,]
 # 1440 minutes constitutes a full day of bike renting - Bay Area bike rental lengths usually go up to full-day or 24 hours (though there are some that can be rented on a weekly, or even monthly basis) - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
@@ -68,7 +70,9 @@ boxplot(CleanedTrip$TripDuration[-TripDurationOutlierIndices],
         ylab = "Duration (mins)"
 )
 
+# determine which trip durations fall outside of the upper bounds of the 95% confidence interval
 TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTrip$TripDuration,probs=0.975)) #this will include the outliers as well
+# Place the outliers in a new data frame
 TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
 boxplot(CleanedTrip$TripDuration[-TripDurationExtremeIndices],
         ylab = "Duration (mins)"
@@ -84,8 +88,10 @@ CleanedTrip <- CleanedTrip[-CancelledTripIndices,]
 
 # 5. Determine weekday rush hours - What consists of rush hour? Provide a definition. Histograms by hour are a good idea to test, or 15 minutes to be more precise. Lubridate will be useful for determining time intervals
 
+# add the durations for each trip to the CleanedTrip data frame
 CleanedTrip <- mutate(CleanedTrip, TripInterval = interval(start_date,end_date))
 
+# create a list of times of 15 minute intervals over the course of a full day
 ListOfTimes <- interval(strptime("00:00", format = "%H:%M",tz="EST"),strptime("00:00", format = "%H:%M",tz="EST") +(15*60))
 InitialTime1 <- strptime("00:00", format = "%H:%M",tz="EST")
 InitialTime <- strptime("00:00", format = "%H:%M",tz="EST")
@@ -95,7 +101,9 @@ for (i in 1:95){
   ListOfTimes[i+1,]<-InitialInterval
 }
 
+# Calculate the number of days between the Trip Time interval and the base list of times
 testdif <- floor(as.numeric(difftime(InitialTime1,CleanedTrip$start_date, units="days")))
+# shift the Trip intervals to the date that the base list of times is set, allowing for comparison of the times
 testshift <- int_shift(CleanedTrip$TripInterval,duration(days=testdif+1))
 attr(testshift,"tzone") <- "EST"
 
@@ -128,16 +136,19 @@ barplot(RushHours$NumberOfTrips, names.arg=unlist(RushHours$Interval),las=2,
 RushHourTripIndices <- int_overlaps(RushHourTimes$POSIXInterval[1],CleanedTrip$ShiftedTripInterval)
 for (i in 1:nrow(RushHourTimes)){
   RushHourTripIndices <- RushHourTripIndices + int_overlaps(RushHourTimes$POSIXInterval[i],CleanedTrip$ShiftedTripInterval)
-} #Get an index of every trip that occured during rush hour
+} #Get an index of every trip that occurred during rush hour
 
 RushHourTrips <- CleanedTrip[RushHourTripIndices,]
 (RushHourTrips$start_station_name)
-TopRushHourStartingStations <- RushHourTrips %>% count(start_station_name,sort = TRUE)
-TopRushHourEndingStations <- RushHourTrips %>% count(end_station_name,sort = TRUE)
+TopRushHourStartingStations <- count(RushHourTrips,start_station_name,sort = TRUE)
+TopRushHourEndingStations <- count(RushHourTrips,end_station_name,sort = TRUE)
 
 # 7. Determine 10 most frequent starting and ending stations during the weekends
 
-
+WeekendTrips <- CleanedTrip[which(wday(CleanedTrip$start_date)==1 | wday(CleanedTrip$start_date)==7),]
+WeekendTrips <- mutate(WeekendTrips,Day = wday(WeekendTrips$start_date))
+TopWeekendTripsStartingStations <- count(WeekendTrips,start_station_name,sort = TRUE)
+TopWeekendTripsEndingStations <- count(WeekendTrips,end_station_name,sort = TRUE)
 
 # 8. Determine the average utilization of bikes for each month (total time bikes were used/total time in the month)
 
