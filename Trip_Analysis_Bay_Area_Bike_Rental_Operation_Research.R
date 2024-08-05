@@ -7,6 +7,7 @@ library(lubridate)
 library(stringr)
 library(mctq)
 library(tidyr)
+library(ivs)
 
 # Copy over the data cleaning steps of the EDA, leaving out the steps that analyzed and plotted the data
 RawWeather <- read.csv("weather.csv")
@@ -154,32 +155,50 @@ TopWeekendTripsEndingStations <- count(WeekendTrips,end_station_name,sort = TRUE
 
 # 8. Determine the average utilization of bikes for each month (total time bikes were used/total time in the month)
 
+CleanedTrip <- mutate(CleanedTrip, Month = month(CleanedTrip$start_date)) #which month does the trip take place in?
+
 # calculate the length of time a bike was used according to the bike ID
-# 
-test <- CleanedTrip[,c(9,12,15)]
-test2 <- aggregate(TripDuration~bike_id+Month,test,FUN=sum)
-test2 <- pivot_wider(test2,names_from = Month, values_from = TripDuration)
+BikeIDMonthUse <- aggregate(TripDuration~bike_id+Month,CleanedTrip,FUN=sum)
+BikeIDMonthUse <- pivot_wider(BikeIDMonthUse,names_from = Month, values_from = TripDuration)
 # 2014 was not a leap year, hence February has 28 days
 MonthDurations <- as.duration(days_in_month(1:12)*1440) #how many minutes are in each month?
 
-JanuaryBikeUsage <- test2[,2]/MonthDurations[1]
-FebruaryBikeUsage <- test2[,3]/MonthDurations[2]
-MarchBikeUsage <- test2[,4]/MonthDurations[3]
-AprilBikeUsage <- test2[,5]/MonthDurations[4]
-MayBikeUsage <- test2[,6]/MonthDurations[5]
-JuneBikeUsage <- test2[,7]/MonthDurations[6]
-JulyBikeUsage <- test2[,8]/MonthDurations[7]
-AugustBikeUsage <- test2[,9]/MonthDurations[8]
-SeptemberBikeUsage <- test2[,10]/MonthDurations[9]
-OctoberBikeUsage <- test2[,11]/MonthDurations[10]
-NovemberBikeUsage <- test2[,12]/MonthDurations[11]
-DecemberBikeUsage <- test2[,13]/MonthDurations[12]
+JanuaryBikeUsage <- BikeIDMonthUse[,2]/MonthDurations[1]
+FebruaryBikeUsage <- BikeIDMonthUse[,3]/MonthDurations[2]
+MarchBikeUsage <- BikeIDMonthUse[,4]/MonthDurations[3]
+AprilBikeUsage <- BikeIDMonthUse[,5]/MonthDurations[4]
+MayBikeUsage <- BikeIDMonthUse[,6]/MonthDurations[5]
+JuneBikeUsage <- BikeIDMonthUse[,7]/MonthDurations[6]
+JulyBikeUsage <- BikeIDMonthUse[,8]/MonthDurations[7]
+AugustBikeUsage <- BikeIDMonthUse[,9]/MonthDurations[8]
+SeptemberBikeUsage <- BikeIDMonthUse[,10]/MonthDurations[9]
+OctoberBikeUsage <- BikeIDMonthUse[,11]/MonthDurations[10]
+NovemberBikeUsage <- BikeIDMonthUse[,12]/MonthDurations[11]
+DecemberBikeUsage <- BikeIDMonthUse[,13]/MonthDurations[12]
 
 # Calculate bike usage independent of ID
-CleanedTrip <- mutate(CleanedTrip, Month = month(CleanedTrip$start_date)) #which month does the trip take place in?
-CleanedTrip <- mutate(CleanedTrip, DaysInTheMonth = as.duration(days_in_month(CleanedTrip$start_date)*86400)) #how many seconds in the month?
 
-BikeUtilizationByMonth <- aggregate(cbind(CleanedTrip$TripDuration,CleanedTrip$DaysInTheMonth)~CleanedTrip$Month, CleanedTrip, FUN=sum) #Sum up the trip duration (in minutes) and the month duration (seconds)
-BikeUtilizationByMonth <- mutate(BikeUtilizationByMonth,TripDurationOverMonth = (BikeUtilizationByMonth$V1*60)/BikeUtilizationByMonth$V2) # convert the total trip duration into seconds and then divide by the total month
+OverallBikeUsage <- CleanedTrip[,c(3,6,15)]
+OverallBikeUsage <- mutate(OverallBikeUsage, TripInterval = iv(OverallBikeUsage$start_date,OverallBikeUsage$end_date))
+OverallBikeUsage <- OverallBikeUsage %>%
+  group_by(Month) %>%
+  reframe(TripInterval = iv_groups(TripInterval))
 
+OverallBikeUsage <- mutate(OverallBikeUsage, TripDuration = (iv_end(TripInterval)-iv_start(TripInterval)))
+OverallBikeUsage <- aggregate(TripDuration~Month,OverallBikeUsage,FUN=sum)
+
+MonthDurations <- as.numeric(MonthDurations)
+OverallBikeUsage <- c(OverallBikeUsage[1,2]/MonthDurations[1],
+                      OverallBikeUsage[2,2]/MonthDurations[2],
+                      OverallBikeUsage[3,2]/MonthDurations[3],
+                      OverallBikeUsage[4,2]/MonthDurations[4],
+                      OverallBikeUsage[5,2]/MonthDurations[5],
+                      OverallBikeUsage[6,2]/MonthDurations[6],
+                      OverallBikeUsage[7,2]/MonthDurations[7],
+                      OverallBikeUsage[8,2]/MonthDurations[8],
+                      OverallBikeUsage[9,2]/MonthDurations[9],
+                      OverallBikeUsage[10,2]/MonthDurations[10],
+                      OverallBikeUsage[11,2]/MonthDurations[11],
+                      OverallBikeUsage[12,2]/MonthDurations[12])
+plot(OverallBikeUsage)
 
