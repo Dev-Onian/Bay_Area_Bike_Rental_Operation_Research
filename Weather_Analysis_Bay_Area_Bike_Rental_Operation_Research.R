@@ -90,12 +90,14 @@ CityZipData <- left_join(x=CityZipData, y=CleanedWeather, by=c("city"="city", "s
 
 # focus on the start date as the weather during the initiation of the trip would impact whether someone chooses to use a bike or use a different mode of transportation
 
-CorrelationWeatherAndTripData <- CityZipData[,c(4,10,12,15,18,20:22)]
+CorrelationWeatherAndTripData <- CityZipData[,c(4,10:22)]
 
 # 
-model.matrix(~0+., data=CorrelationWeatherAndTripData) %>% 
-  cor(use="pairwise.complete.obs") %>% 
-  ggcorrplot(show.diag=FALSE, type="lower", lab=TRUE, lab_size=2)
+test <- model.matrix(~0+., data=CorrelationWeatherAndTripData)
+cor(x=test[,c(1:6)],y=test[,c(7:20)],use="pairwise.complete.obs") %>%
+    ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
+               title = "Weather and Trip Variable Correlation",
+               colors = c("blue", "white", "red"))
 
 
 
