@@ -17,6 +17,8 @@ library(stringr)
 library(mctq)
 library(tidyr)
 library(ivs)
+library(corrplot)
+library(ggcorrplot)
 
 # Copy over the data cleaning steps of the EDA, leaving out the steps that analyzed and plotted the data
 RawWeather <- read.csv("weather.csv")
@@ -87,5 +89,13 @@ CityZipData <- CityZipData[,c(2,3,4,6,10,12,13,14,17,18)]
 CityZipData <- left_join(x=CityZipData, y=CleanedWeather, by=c("city"="city", "start_date"="date"))
 
 # focus on the start date as the weather during the initiation of the trip would impact whether someone chooses to use a bike or use a different mode of transportation
+
+CorrelationWeatherAndTripData <- CityZipData[,c(4,10,12,15,18,20:22)]
+
+# 
+model.matrix(~0+., data=CorrelationWeatherAndTripData) %>% 
+  cor(use="pairwise.complete.obs") %>% 
+  ggcorrplot(show.diag=FALSE, type="lower", lab=TRUE, lab_size=2)
+
 
 
