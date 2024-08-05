@@ -21,13 +21,14 @@ library(ivs)
 # Copy over the data cleaning steps of the EDA, leaving out the steps that analyzed and plotted the data
 RawWeather <- read.csv("weather.csv")
 CleanedWeather <- RawWeather
-CleanedWeather$date <- strptime(CleanedWeather$date, format = "%m/%d/%Y")
+CleanedWeather$date <- strptime(CleanedWeather$date, format = "%m/%d/%Y", tz="EST")
 CleanedWeather$precipitation_inches[CleanedWeather$precipitation_inches=="T"]=0.001
 CleanedWeather$precipitation_inches <- as.numeric(CleanedWeather$precipitation_inches)
 CleanedWeather$events[CleanedWeather$events==""]="Not Recorded"
 CleanedWeather$events[CleanedWeather$events=="rain"]="Rain"
 CleanedWeather$events <- factor(CleanedWeather$events)
 CleanedWeather$city <- factor(CleanedWeather$city)
+CleanedWeather$zip_code <- factor(CleanedWeather$zip_code)
 CleanedWeather <- mutate(CleanedWeather, ImputedEvents = case_when(
   precipitation_inches=0 & min_visibility_miles<0.62 ~ "Fog",
   precipitation_inches=0 & min_visibility_miles<1.2 & min_visibility_miles>0.62 ~ "Mist",
@@ -78,7 +79,13 @@ CancelledTripIndices <- which(CleanedTrip$TripDuration<as.difftime(3,units="mins
 CancelledTripValues <- CleanedTrip[CancelledTripIndices,]
 CleanedTrip <- CleanedTrip[-CancelledTripIndices,]
 
+# Need to make the dates applicable in teh trip dataset so that they work with the weather dataset
+CleanedTrip$start_date <- floor_date(CleanedTrip$start_date, "day")
 
+CityZipData <- left_join(x=CleanedStation, y=CleanedTrip, by=c("id"="start_station_id"))
+CityZipData <- CityZipData[,c(2,3,4,6,10,12,13,14,17,18)]
+CityZipData <- left_join(x=CityZipData, y=CleanedWeather, by=c("city"="city", "start_date"="date"))
 
+# focus on the start date as the weather during the initiation of the trip would impact whether someone chooses to use a bike or use a different mode of transportation
 
 
