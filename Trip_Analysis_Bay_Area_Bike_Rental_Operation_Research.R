@@ -158,23 +158,43 @@ TopWeekendTripsEndingStations <- count(WeekendTrips,end_station_name,sort = TRUE
 CleanedTrip <- mutate(CleanedTrip, Month = month(CleanedTrip$start_date)) #which month does the trip take place in?
 
 # calculate the length of time a bike was used according to the bike ID
-BikeIDMonthUse <- aggregate(TripDuration~bike_id+Month,CleanedTrip,FUN=sum)
-BikeIDMonthUse <- pivot_wider(BikeIDMonthUse,names_from = Month, values_from = TripDuration)
-# 2014 was not a leap year, hence February has 28 days
-MonthDurations <- as.duration(days_in_month(1:12)*1440) #how many minutes are in each month?
+BikeIDMonthUseBase <- aggregate(TripDuration~bike_id+Month,CleanedTrip,FUN=sum)
 
-JanuaryBikeUsage <- BikeIDMonthUse[,2]/MonthDurations[1]
-FebruaryBikeUsage <- BikeIDMonthUse[,3]/MonthDurations[2]
-MarchBikeUsage <- BikeIDMonthUse[,4]/MonthDurations[3]
-AprilBikeUsage <- BikeIDMonthUse[,5]/MonthDurations[4]
-MayBikeUsage <- BikeIDMonthUse[,6]/MonthDurations[5]
-JuneBikeUsage <- BikeIDMonthUse[,7]/MonthDurations[6]
-JulyBikeUsage <- BikeIDMonthUse[,8]/MonthDurations[7]
-AugustBikeUsage <- BikeIDMonthUse[,9]/MonthDurations[8]
-SeptemberBikeUsage <- BikeIDMonthUse[,10]/MonthDurations[9]
-OctoberBikeUsage <- BikeIDMonthUse[,11]/MonthDurations[10]
-NovemberBikeUsage <- BikeIDMonthUse[,12]/MonthDurations[11]
-DecemberBikeUsage <- BikeIDMonthUse[,13]/MonthDurations[12]
+BikeIDMonthUseBase
+ggplot(BikeIDMonthUseBase, mapping = aes(x=Month, y=as.numeric(TripDuration))) + geom_point()
+
+BikeIDMonthUse <- pivot_wider(BikeIDMonthUseBase,names_from = Month, values_from = TripDuration)
+# 2014 was not a leap year, hence February has 28 days
+MonthDurations <- as.duration(days_in_month(1:12)*86400) #how many seconds are in each month?
+
+BikeIDMonthUse[,2] <- BikeIDMonthUse[,2]/MonthDurations[1]
+BikeIDMonthUse[,3] <- BikeIDMonthUse[,3]/MonthDurations[2]
+BikeIDMonthUse[,4] <- BikeIDMonthUse[,4]/MonthDurations[3]
+BikeIDMonthUse[,5] <- BikeIDMonthUse[,5]/MonthDurations[4]
+BikeIDMonthUse[,6] <- BikeIDMonthUse[,6]/MonthDurations[5]
+BikeIDMonthUse[,7] <- BikeIDMonthUse[,7]/MonthDurations[6]
+BikeIDMonthUse[,8] <- BikeIDMonthUse[,8]/MonthDurations[7]
+BikeIDMonthUse[,9] <- BikeIDMonthUse[,9]/MonthDurations[8]
+BikeIDMonthUse[,10] <- BikeIDMonthUse[,10]/MonthDurations[9]
+BikeIDMonthUse[,11] <- BikeIDMonthUse[,11]/MonthDurations[10]
+BikeIDMonthUse[,12] <- BikeIDMonthUse[,12]/MonthDurations[11]
+BikeIDMonthUse[,13] <- BikeIDMonthUse[,13]/MonthDurations[12]
+
+TopJanuaryBikes <- arrange(BikeIDMonthUse[,c(1,2)], desc(BikeIDMonthUse[,2]))
+TopFebruaryBikes <- arrange(BikeIDMonthUse[,c(1,3)], desc(BikeIDMonthUse[,3]))
+TopMarchBikes <- arrange(BikeIDMonthUse[,c(1,4)], desc(BikeIDMonthUse[,4]))
+TopAprilBikes <- arrange(BikeIDMonthUse[,c(1,5)], desc(BikeIDMonthUse[,5]))
+TopMayBikes <- arrange(BikeIDMonthUse[,c(1,6)], desc(BikeIDMonthUse[,6]))
+TopJuneBikes <- arrange(BikeIDMonthUse[,c(1,7)], desc(BikeIDMonthUse[,7]))
+TopJulyBikes <- arrange(BikeIDMonthUse[,c(1,8)], desc(BikeIDMonthUse[,8]))
+TopAugustBikes <- arrange(BikeIDMonthUse[,c(1,9)], desc(BikeIDMonthUse[,9]))
+TopSeptemberBikes <- arrange(BikeIDMonthUse[,c(1,10)], desc(BikeIDMonthUse[,10]))
+TopOctoberBikes <- arrange(BikeIDMonthUse[,c(1,11)], desc(BikeIDMonthUse[,11]))
+TopNovemebrBikes <- arrange(BikeIDMonthUse[,c(1,12)], desc(BikeIDMonthUse[,12]))
+TopDecemberBikes <- arrange(BikeIDMonthUse[,c(1,13)], desc(BikeIDMonthUse[,13]))
+
+TransposeTest <- as.data.frame(t(BikeIDMonthUse[,-1]))
+colnames(TransposeTest) <- BikeIDMonthUse$bike_id
 
 # Calculate bike usage independent of ID
 
