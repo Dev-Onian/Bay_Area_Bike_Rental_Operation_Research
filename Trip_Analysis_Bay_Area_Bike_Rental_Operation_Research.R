@@ -5,6 +5,8 @@ library(Hmisc)
 library(dplyr)
 library(lubridate)
 library(stringr)
+library(mctq)
+library(tidyr)
 
 # Copy over the data cleaning steps of the EDA, leaving out the steps that analyzed and plotted the data
 RawWeather <- read.csv("weather.csv")
@@ -151,5 +153,33 @@ TopWeekendTripsStartingStations <- count(WeekendTrips,start_station_name,sort = 
 TopWeekendTripsEndingStations <- count(WeekendTrips,end_station_name,sort = TRUE)
 
 # 8. Determine the average utilization of bikes for each month (total time bikes were used/total time in the month)
+
+# calculate the length of time a bike was used according to the bike ID
+# 
+test <- CleanedTrip[,c(9,12,15)]
+test2 <- aggregate(TripDuration~bike_id+Month,test,FUN=sum)
+test2 <- pivot_wider(test2,names_from = Month, values_from = TripDuration)
+# 2014 was not a leap year, hence February has 28 days
+MonthDurations <- as.duration(days_in_month(1:12)*1440) #how many minutes are in each month?
+
+JanuaryBikeUsage <- test2[,2]/MonthDurations[1]
+FebruaryBikeUsage <- test2[,3]/MonthDurations[2]
+MarchBikeUsage <- test2[,4]/MonthDurations[3]
+AprilBikeUsage <- test2[,5]/MonthDurations[4]
+MayBikeUsage <- test2[,6]/MonthDurations[5]
+JuneBikeUsage <- test2[,7]/MonthDurations[6]
+JulyBikeUsage <- test2[,8]/MonthDurations[7]
+AugustBikeUsage <- test2[,9]/MonthDurations[8]
+SeptemberBikeUsage <- test2[,10]/MonthDurations[9]
+OctoberBikeUsage <- test2[,11]/MonthDurations[10]
+NovemberBikeUsage <- test2[,12]/MonthDurations[11]
+DecemberBikeUsage <- test2[,13]/MonthDurations[12]
+
+# Calculate bike usage independent of ID
+CleanedTrip <- mutate(CleanedTrip, Month = month(CleanedTrip$start_date)) #which month does the trip take place in?
+CleanedTrip <- mutate(CleanedTrip, DaysInTheMonth = as.duration(days_in_month(CleanedTrip$start_date)*86400)) #how many seconds in the month?
+
+BikeUtilizationByMonth <- aggregate(cbind(CleanedTrip$TripDuration,CleanedTrip$DaysInTheMonth)~CleanedTrip$Month, CleanedTrip, FUN=sum) #Sum up the trip duration (in minutes) and the month duration (seconds)
+BikeUtilizationByMonth <- mutate(BikeUtilizationByMonth,TripDurationOverMonth = (BikeUtilizationByMonth$V1*60)/BikeUtilizationByMonth$V2) # convert the total trip duration into seconds and then divide by the total month
 
 
