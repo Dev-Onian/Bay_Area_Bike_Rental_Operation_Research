@@ -58,36 +58,42 @@ CleanedTrip <- mutate(CleanedTrip, TripDuration = (CleanedTrip$end_date-CleanedT
 boxplot(CleanedTrip$TripDuration,
         ylab = "Duration (mins)"
 )
+title("Bike Trip Durations Including Extreme Outliers")
+
 # index 229947 makes it impossible to see the rest of the data. It is 287839 minutes (~200 days long), while the next longest duration is only 12007 minutes (~8 days)
 boxplot(CleanedTrip$TripDuration[-229947],
         ylab = "Duration (mins)"
 )
+title("Bike Trip Durations Including Potential Outliers")
 # the 2nd longest trip is 8 days, which is technically possible given some bay area bikes can be rented out for up to a month - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
 # Though the long durations of the trips compared to the vast majority may make them possible values, they may still be extreme and beyond the purview of the analysis
 
-# figure out which trips lasted longer than 1 day
-TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(43200,units="mins"))
+# Figure out which trips lasted longer than 1 month, and if they are customer then remove them
+TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(43200,units="mins")|CleanedTrip$subscription_type == "customer")
 TripDurationOutliers <- CleanedTrip[TripDurationOutlierIndices,]
-# 1440 minutes constitutes a full day of bike renting - Bay Area bike rental lengths usually go up to full-day or 24 hours (though there are some that can be rented on a weekly, or even monthly basis) - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
 boxplot(CleanedTrip$TripDuration[-TripDurationOutlierIndices],
         ylab = "Duration (mins)"
 )
+title("Bike Trip Durations")
 
+CleanedTrip <- CleanedTrip[-TripDurationOutlierIndices,]
+
+# Store bike trips that fall in the upper 2.5% regarding duration
 # determine which trip durations fall outside of the upper bounds of the 95% confidence interval
 TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTrip$TripDuration,probs=0.975)) #this will include the outliers as well
-# Place the outliers in a new data frame
+# Place these extreme values in a new data frame
 TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
-boxplot(CleanedTrip$TripDuration[-TripDurationExtremeIndices],
-        ylab = "Duration (mins)"
-)
-
-CleanedTrip <- CleanedTrip[-TripDurationExtremeIndices,] #remove the outlier indices from the main cleaned dataframe
 
 # 4. Record and remove "cancelled trips" (i.e., any trip <3 minutes)
 
 CancelledTripIndices <- which(CleanedTrip$TripDuration<as.difftime(3,units="mins"))
 CancelledTripValues <- CleanedTrip[CancelledTripIndices,]
 CleanedTrip <- CleanedTrip[-CancelledTripIndices,]
+
+boxplot(CleanedTrip$TripDuration,
+        ylab = "Duration (mins)"
+)
+title("Cleaned Bike Trip Durations")
 
 # 5. Determine weekday rush hours - What consists of rush hour? Provide a definition. Histograms by hour are a good idea to test, or 15 minutes to be more precise. Lubridate will be useful for determining time intervals
 
@@ -138,13 +144,14 @@ barplot(RushHours$NumberOfTrips, col = cols, names.arg=unlist(RushHours$Interval
 
 
 # 6. Determine 10 most frequent starting and ending stations during rush hours
+WeekdayTrips <- CleanedTrip[-which(wday(CleanedTrip$start_date)==1 | wday(CleanedTrip$start_date)==7),]
 
-RushHourTripIndices <- int_overlaps(RushHourTimes$POSIXInterval[1],CleanedTrip$ShiftedTripInterval)
+RushHourTripIndices <- int_overlaps(RushHourTimes$POSIXInterval[1],WeekdayTrips$ShiftedTripInterval)
 for (i in 1:nrow(RushHourTimes)){
-  RushHourTripIndices <- append(RushHourTripIndices,int_overlaps(RushHourTimes$POSIXInterval[i],CleanedTrip$ShiftedTripInterval))
+  RushHourTripIndices <- append(RushHourTripIndices,int_overlaps(RushHourTimes$POSIXInterval[i],WeekdayTrips$ShiftedTripInterval))
 } #Get an index of every trip that occurred during rush hour
 
-RushHourTrips <- CleanedTrip[RushHourTripIndices,]
+RushHourTrips <- WeekdayTrips[RushHourTripIndices,]
 (RushHourTrips$start_station_name)
 TopRushHourStartingStations <- count(RushHourTrips,start_station_name,sort = TRUE)
 TopRushHourEndingStations <- count(RushHourTrips,end_station_name,sort = TRUE)

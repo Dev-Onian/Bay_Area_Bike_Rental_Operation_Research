@@ -64,6 +64,9 @@ CleanedTrip$start_date <- strptime(RawTrip$start_date, format = "%m/%d/%Y %H:%M"
 CleanedTrip$end_date <- strptime(RawTrip$end_date, format = "%m/%d/%Y %H:%M", tz="EST")
 CleanedTrip <- mutate(CleanedTrip, TripDuration = (CleanedTrip$end_date-CleanedTrip$start_date))
 
+StationName <- unique(CleanedTrip$start_station_name)
+plot(CleanedStation$long,CleanedStation$lat)
+
 # figure out which trips lasted longer than 1 day
 TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(43200,units="mins"))
 TripDurationOutliers <- CleanedTrip[TripDurationOutlierIndices,]
@@ -97,44 +100,51 @@ cor(x=test1[,c(1:6)],y=test1[,c(7:20)],use="pairwise.complete.obs") %>%
                title = "Weather and Trip Variable Correlation",
                colors = c("blue", "white", "red"))
 
+cor(test1,use="pairwise.complete.obs") %>%
+  ggcorrplot(show.diag=NULL, type="lower", lab=TRUE, lab_size=2,
+             title = "Weather and Trip Variable Correlation",
+             colors = c("blue", "white", "red"))
+
 
 CorrelationWeatherAndTripData <- CityZipData[,c(1,10:22)]
 test <- model.matrix(~0+., data=CorrelationWeatherAndTripData)
 cor(x=test[,c(1:10)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 cor(x=test[,c(11:20)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 cor(x=test[,c(21:30)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 cor(x=test[,c(31:40)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 cor(x=test[,c(41:50)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 cor(x=test[,c(51:60)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 cor(x=test[,c(61:65)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 cor(x=test[,c(66:71)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+  corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
+           tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 
-cor(x=test[,c(66:71)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
-  corrplot(show.diag=NULL, method = "color", type="full",
-           tl.col = "black", title = "Weather and Trip Variable Correlation")
+# Linear model
+
+TripDurationLinearModel <- lm(as.numeric(TripDuration) ~ max_temperature_f+mean_temperature_f+min_temperature_f+max_visibility_miles+mean_visibility_miles+min_visibility_miles+max_wind_Speed_mph+mean_wind_speed_mph+max_gust_speed_mph+precipitation_inches+cloud_cover+events, data=CityZipData)
+summary(TripDurationLinearModel)
 
 
+NewWeatherTripData <- CityZipData[,c(4,5,11:22)]
