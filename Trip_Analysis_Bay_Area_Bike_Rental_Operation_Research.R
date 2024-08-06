@@ -209,6 +209,19 @@ TopBikes <- cbind(TopJanuaryBikes$bike_id,
                   TopNovemebrBikes$bike_id,
                   TopDecemberBikes$bike_id)
 
+AverageBikeUsage <- rbind(cbind(mean(as.numeric(unlist(TopJanuaryBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopFebruaryBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopMarchBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopAprilBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopMayBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopJuneBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopJulyBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopAugustBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopSeptemberBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopOctoberBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopNovemebrBikes[,2])), na.rm=T),
+                          mean(as.numeric(unlist(TopDecemberBikes[,2])), na.rm=T)),c(1:12))
+plot(x = AverageBikeUsage[2,], y= AverageBikeUsage[1,]*100, xlab="Month", ylab="Average Monthly Bike Utilization (%)", main="Average Bike Usage per Month")
 
 TransposeTest <- as.data.frame(t(BikeIDMonthUse[,-1]))
 colnames(TransposeTest) <- BikeIDMonthUse$bike_id
