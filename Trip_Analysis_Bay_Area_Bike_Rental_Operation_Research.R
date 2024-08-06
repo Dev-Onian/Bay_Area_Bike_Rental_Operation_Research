@@ -122,23 +122,26 @@ for (i in 1:95){
 RushHours <- cbind.data.frame(RushHours,POSIXInterval = ListOfTimes)
 
 RushHourTimes <-RushHours[which(RushHours$NumberOfTrips>=quantile(RushHours$NumberOfTrips,probs=0.8)),]
+RushHourCutoff <- quantile(RushHours$NumberOfTrips,probs=0.75)
 
 RushHours$Interval <- str_remove_all(RushHours$Interval,"\\d{4}[-]\\d{2}[-]\\d{2}")
 RushHours$Interval <- str_remove_all(RushHours$Interval,"[:]\\d{2}[ ]")
 RushHours$Interval[1] <- "00:00EST--00:15EST"
 RushHours$Interval[96] <- "23:45EST--00:00EST"
 
+cols <- c("white", "red")[(RushHours$NumberOfTrips > RushHourCutoff) + 1]  
 par(mar=c(6,4,4,1))
-barplot(RushHours$NumberOfTrips, names.arg=unlist(RushHours$Interval),las=2,
+barplot(RushHours$NumberOfTrips, col = cols, names.arg=unlist(RushHours$Interval),las=2,
         ylab = "Number of Trips",
         main = "Bike Usage Stratified By Time",
         cex.names=0.5)
+
 
 # 6. Determine 10 most frequent starting and ending stations during rush hours
 
 RushHourTripIndices <- int_overlaps(RushHourTimes$POSIXInterval[1],CleanedTrip$ShiftedTripInterval)
 for (i in 1:nrow(RushHourTimes)){
-  RushHourTripIndices <- RushHourTripIndices + int_overlaps(RushHourTimes$POSIXInterval[i],CleanedTrip$ShiftedTripInterval)
+  RushHourTripIndices <- append(RushHourTripIndices,int_overlaps(RushHourTimes$POSIXInterval[i],CleanedTrip$ShiftedTripInterval))
 } #Get an index of every trip that occurred during rush hour
 
 RushHourTrips <- CleanedTrip[RushHourTripIndices,]
