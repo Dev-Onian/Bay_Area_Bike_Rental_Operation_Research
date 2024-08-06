@@ -66,7 +66,7 @@ boxplot(CleanedTrip$TripDuration[-229947],
 # Though the long durations of the trips compared to the vast majority may make them possible values, they may still be extreme and beyond the purview of the analysis
 
 # figure out which trips lasted longer than 1 day
-TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(1440,units="mins"))
+TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(43200,units="mins"))
 TripDurationOutliers <- CleanedTrip[TripDurationOutlierIndices,]
 # 1440 minutes constitutes a full day of bike renting - Bay Area bike rental lengths usually go up to full-day or 24 hours (though there are some that can be rented on a weekly, or even monthly basis) - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
 boxplot(CleanedTrip$TripDuration[-TripDurationOutlierIndices],
@@ -196,6 +196,20 @@ TopOctoberBikes <- arrange(BikeIDMonthUse[,c(1,11)], desc(BikeIDMonthUse[,11]))
 TopNovemebrBikes <- arrange(BikeIDMonthUse[,c(1,12)], desc(BikeIDMonthUse[,12]))
 TopDecemberBikes <- arrange(BikeIDMonthUse[,c(1,13)], desc(BikeIDMonthUse[,13]))
 
+TopBikes <- cbind(TopJanuaryBikes$bike_id,
+                  TopFebruaryBikes$bike_id,
+                  TopMarchBikes$bike_id,
+                  TopAprilBikes$bike_id,
+                  TopMayBikes$bike_id,
+                  TopJuneBikes$bike_id,
+                  TopJulyBikes$bike_id,
+                  TopAugustBikes$bike_id,
+                  TopSeptemberBikes$bike_id,
+                  TopOctoberBikes$bike_id,
+                  TopNovemebrBikes$bike_id,
+                  TopDecemberBikes$bike_id)
+
+
 TransposeTest <- as.data.frame(t(BikeIDMonthUse[,-1]))
 colnames(TransposeTest) <- BikeIDMonthUse$bike_id
 
@@ -210,7 +224,7 @@ OverallBikeUsage <- OverallBikeUsage %>%
 OverallBikeUsage <- mutate(OverallBikeUsage, TripDuration = (iv_end(TripInterval)-iv_start(TripInterval)))
 OverallBikeUsage <- aggregate(TripDuration~Month,OverallBikeUsage,FUN=sum)
 
-MonthDurations <- as.numeric(MonthDurations)
+#MonthDurations <- as.numeric(MonthDurations)
 OverallBikeUsage <- c(OverallBikeUsage[1,2]/MonthDurations[1],
                       OverallBikeUsage[2,2]/MonthDurations[2],
                       OverallBikeUsage[3,2]/MonthDurations[3],
@@ -223,5 +237,5 @@ OverallBikeUsage <- c(OverallBikeUsage[1,2]/MonthDurations[1],
                       OverallBikeUsage[10,2]/MonthDurations[10],
                       OverallBikeUsage[11,2]/MonthDurations[11],
                       OverallBikeUsage[12,2]/MonthDurations[12])
-plot(OverallBikeUsage)
-
+OverallBikeUsage <- cbind(OverallBikeUsage,c(1:12))
+plot(x = OverallBikeUsage[,2], y= OverallBikeUsage[,1]*100, xlab="Month", ylab="Monthly Bike Utilization (%)", main="Bike Usage per Month")
