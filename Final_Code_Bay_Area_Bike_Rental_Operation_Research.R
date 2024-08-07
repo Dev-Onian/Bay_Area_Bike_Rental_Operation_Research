@@ -176,7 +176,7 @@ print(status(CleanedStation))
 freq(CleanedStation) 
 print(profiling_num(CleanedStation))
 plot_num(CleanedStation[,c(1:6)])
-describe(CleanedStation)
+describe(CleanedStation[,c(1:6)])
 
 glimpse(CleanedTrip)
 print(status(CleanedTrip))
@@ -275,15 +275,15 @@ for (i in 1:nrow(RushHourTimes)){
 
 RushHourTrips <- WeekdayTrips[RushHourTripIndices,]
 (RushHourTrips$start_station_name)
-TopRushHourStartingStations <- count(RushHourTrips,start_station_name,sort = TRUE)
-TopRushHourEndingStations <- count(RushHourTrips,end_station_name,sort = TRUE)
+TopRushHourStartingStations <- dplyr::count(RushHourTrips,start_station_name,sort = TRUE)
+TopRushHourEndingStations <- dplyr::count(RushHourTrips,end_station_name,sort = TRUE)
 
 # 7. Determine 10 most frequent starting and ending stations during the weekends
 
 WeekendTrips <- CleanedTrip[which(wday(CleanedTrip$start_date)==1 | wday(CleanedTrip$start_date)==7),]
 WeekendTrips <- mutate(WeekendTrips,Day = wday(WeekendTrips$start_date))
-TopWeekendTripsStartingStations <- count(WeekendTrips,start_station_name,sort = TRUE)
-TopWeekendTripsEndingStations <- count(WeekendTrips,end_station_name,sort = TRUE)
+TopWeekendTripsStartingStations <- dplyr::count(WeekendTrips,start_station_name,sort = TRUE)
+TopWeekendTripsEndingStations <- dplyr::count(WeekendTrips,end_station_name,sort = TRUE)
 
 # 8. Determine the average utilization of bikes for each month (total time bikes were used/total time in the month)
 
@@ -312,18 +312,18 @@ BikeIDMonthUse[,11] <- BikeIDMonthUse[,11]/MonthDurations[10]
 BikeIDMonthUse[,12] <- BikeIDMonthUse[,12]/MonthDurations[11]
 BikeIDMonthUse[,13] <- BikeIDMonthUse[,13]/MonthDurations[12]
 
-TopJanuaryBikes <- arrange(BikeIDMonthUse[,c(1,2)], desc(BikeIDMonthUse[,2]))
-TopFebruaryBikes <- arrange(BikeIDMonthUse[,c(1,3)], desc(BikeIDMonthUse[,3]))
-TopMarchBikes <- arrange(BikeIDMonthUse[,c(1,4)], desc(BikeIDMonthUse[,4]))
-TopAprilBikes <- arrange(BikeIDMonthUse[,c(1,5)], desc(BikeIDMonthUse[,5]))
-TopMayBikes <- arrange(BikeIDMonthUse[,c(1,6)], desc(BikeIDMonthUse[,6]))
-TopJuneBikes <- arrange(BikeIDMonthUse[,c(1,7)], desc(BikeIDMonthUse[,7]))
-TopJulyBikes <- arrange(BikeIDMonthUse[,c(1,8)], desc(BikeIDMonthUse[,8]))
-TopAugustBikes <- arrange(BikeIDMonthUse[,c(1,9)], desc(BikeIDMonthUse[,9]))
-TopSeptemberBikes <- arrange(BikeIDMonthUse[,c(1,10)], desc(BikeIDMonthUse[,10]))
-TopOctoberBikes <- arrange(BikeIDMonthUse[,c(1,11)], desc(BikeIDMonthUse[,11]))
-TopNovemebrBikes <- arrange(BikeIDMonthUse[,c(1,12)], desc(BikeIDMonthUse[,12]))
-TopDecemberBikes <- arrange(BikeIDMonthUse[,c(1,13)], desc(BikeIDMonthUse[,13]))
+TopJanuaryBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,2)], desc(BikeIDMonthUse[,2]))
+TopFebruaryBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,3)], desc(BikeIDMonthUse[,3]))
+TopMarchBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,4)], desc(BikeIDMonthUse[,4]))
+TopAprilBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,5)], desc(BikeIDMonthUse[,5]))
+TopMayBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,6)], desc(BikeIDMonthUse[,6]))
+TopJuneBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,7)], desc(BikeIDMonthUse[,7]))
+TopJulyBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,8)], desc(BikeIDMonthUse[,8]))
+TopAugustBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,9)], desc(BikeIDMonthUse[,9]))
+TopSeptemberBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,10)], desc(BikeIDMonthUse[,10]))
+TopOctoberBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,11)], desc(BikeIDMonthUse[,11]))
+TopNovemebrBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,12)], desc(BikeIDMonthUse[,12]))
+TopDecemberBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,13)], desc(BikeIDMonthUse[,13]))
 
 TopBikes <- cbind(TopJanuaryBikes$bike_id,
                   TopFebruaryBikes$bike_id,
@@ -393,45 +393,45 @@ CityZipData <- left_join(x=CityZipData, y=CleanedWeather, by=c("city"="city", "s
 
 # focus on the start date as the weather during the initiation of the trip would impact whether someone chooses to use a bike or use a different mode of transportation
 
-CorrelationWeatherAndTripData1 <- CityZipData[,c(4,10:22,24)]
+CorrelationWeatherAndTripData1 <- CityZipData[,c(4,11:22)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(7:27)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
+cor(x=test1[,c(7:17)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
   ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
              title = "Weather and Trip Variable Correlation",
              colors = c("blue", "white", "red"))
 
 
-CorrelationWeatherAndTripData <- CityZipData[,c(1,10:22)]
+CorrelationWeatherAndTripData <- CityZipData[,c(1,11:22)]
 test <- model.matrix(~0+., data=CorrelationWeatherAndTripData)
-cor(x=test[,c(1:10)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(1:10)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-cor(x=test[,c(11:20)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(11:20)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-cor(x=test[,c(21:30)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(21:30)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-cor(x=test[,c(31:40)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(31:40)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-cor(x=test[,c(41:50)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(41:50)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-cor(x=test[,c(51:60)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(51:60)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-cor(x=test[,c(61:65)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(61:65)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-cor(x=test[,c(66:71)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
+cor(x=test[,c(66:71)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
@@ -452,7 +452,7 @@ summary(TripDurationLinearModel3)
 CityZipDataCustomer <- CityZipData[CityZipData$subscription_type=="Customer",]
 CorrelationWeatherAndTripData1 <- CityZipDataCustomer[,c(4,11:23,25)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(7:27)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
+cor(x=test1[,c(7:20,22:26)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
   ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
              title = "Weather and Trip Variable Correlation",
              colors = c("blue", "white", "red"))
@@ -460,26 +460,25 @@ cor(x=test1[,c(7:27)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
 CityZipDataSubscriber <- CityZipData[CityZipData$subscription_type=="Subscriber",]
 CorrelationWeatherAndTripData1 <- CityZipDataSubscriber[,c(4,11:23,25)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(7:27)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
+cor(x=test1[,c(7:20,22:26)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
   ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
              title = "Weather and Trip Variable Correlation",
              colors = c("blue", "white", "red"))
-
 
 NewWeatherTripData <- ddply(CityZipData[,c(4,5,11:22)],.(city,start_date),nrow)
 NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CleanedWeather, by=c("city"="city", "start_date"="date"))
 CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(3:17)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(2:24)],y=test1[,c(1)],use="pairwise.complete.obs") %>%
+cor(x=test1[,c(2:16,18:23)],y=test1[,c(1)],use="pairwise.complete.obs") %>%
   ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
              title = "Weather and Trip Variable Correlation",
              colors = c("blue", "white", "red"))
 
 NewWeatherTripData <- ddply(CityZipData[,c(4,5,11:22)],.(city,start_date),nrow)
-NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CityZipData[,c(4:25)], by=c("city"="city", "start_date"="start_date"))
-CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(1,3,9:21)]
+NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CleanedWeather, by=c("city"="city", "start_date"="date"))
+CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(1,3:17)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(8:22)],y=test1[,c(1:7)],use="pairwise.complete.obs") %>%
+cor(x=test1[,c(7:20)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
   ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
              title = "Weather and Trip Variable Correlation",
              colors = c("blue", "white", "red"))
