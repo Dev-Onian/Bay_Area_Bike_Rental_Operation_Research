@@ -65,7 +65,7 @@ CleanedTrip$end_date <- strptime(RawTrip$end_date, format = "%m/%d/%Y %H:%M", tz
 CleanedTrip <- mutate(CleanedTrip, TripDuration = (CleanedTrip$end_date-CleanedTrip$start_date))
 
 StationName <- unique(CleanedTrip$start_station_name)
-plot(CleanedStation$long,CleanedStation$lat)
+plot(CleanedStation$long,CleanedStation$lat, xlab = "Longitude", ylab = "Latitude", main = "Station Coordinates")
 
 # figure out which trips lasted longer than 1 day
 TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(43200,units="mins"))
@@ -93,17 +93,17 @@ CityZipData <- left_join(x=CityZipData, y=CleanedWeather, by=c("city"="city", "s
 
 # focus on the start date as the weather during the initiation of the trip would impact whether someone chooses to use a bike or use a different mode of transportation
 
-CorrelationWeatherAndTripData1 <- CityZipData[,c(4,10:22)]
+CorrelationWeatherAndTripData1 <- CityZipData[,c(4,10:22,24)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(1:6)],y=test1[,c(7:20)],use="pairwise.complete.obs") %>%
+cor(x=test1[,c(7:27)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
     ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
                title = "Weather and Trip Variable Correlation",
                colors = c("blue", "white", "red"))
 
 cor(test1,use="pairwise.complete.obs") %>%
-  ggcorrplot(show.diag=NULL, type="lower", lab=TRUE, lab_size=2,
-             title = "Weather and Trip Variable Correlation",
-             colors = c("blue", "white", "red"))
+ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
+               title = "Weather and Trip Variable Correlation",
+               colors = c("blue", "white", "red"))
 
 
 CorrelationWeatherAndTripData <- CityZipData[,c(1,10:22)]
@@ -148,3 +148,8 @@ summary(TripDurationLinearModel)
 
 
 NewWeatherTripData <- CityZipData[,c(4,5,11:22)]
+
+
+
+
+
