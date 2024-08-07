@@ -393,11 +393,50 @@ CityZipData <- left_join(x=CityZipData, y=CleanedWeather, by=c("city"="city", "s
 
 # focus on the start date as the weather during the initiation of the trip would impact whether someone chooses to use a bike or use a different mode of transportation
 
+# It is plausible that customers and subscribers behave differently, and have different purposes for using bikes (i.e. recreation vs work)
+
+# correlation for all riders
+NewWeatherTripData <- ddply(CityZipData[,c(4,5,11:22)],.(city,start_date),nrow)
+names(NewWeatherTripData)[names(NewWeatherTripData) == 'V1'] <- "Number of Trips"
+NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CityZipData[,c(4,5,11:23)], by=c("city"="city", "start_date"="start_date"))
+CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(3:16)]
+test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
+cor(x=test1[,c(3:17)],y=test1[,c(1,2)],use="pairwise.complete.obs") %>%
+  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
+             title = "Weather and Trip Variable Correlation for all Users",
+             colors = c("blue", "white", "red"))
+
+# correlation for customers
+CityZipDataCustomer <- CityZipData[CityZipData$subscription_type=="Customer",]
+NewWeatherTripData <- ddply(CityZipDataCustomer[,c(4,5,11:22)],.(city,start_date),nrow)
+names(NewWeatherTripData)[names(NewWeatherTripData) == 'V1'] <- "Number of Trips"
+NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CityZipDataCustomer[,c(4,5,11:23)], by=c("city"="city", "start_date"="start_date"))
+CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(3:16)]
+test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
+cor(x=test1[,c(3:17)],y=test1[,c(1,2)],use="pairwise.complete.obs") %>%
+  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
+             title = "Weather and Trip Variable Correlation for Customers",
+             colors = c("blue", "white", "red"))
+
+# correlation for subscribers
+CityZipDataSubscriber <- CityZipData[CityZipData$subscription_type=="Subscriber",]
+NewWeatherTripData <- ddply(CityZipDataSubscriber[,c(4,5,11:22)],.(city,start_date),nrow)
+names(NewWeatherTripData)[names(NewWeatherTripData) == 'V1'] <- "Number of Trips"
+NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CityZipDataSubscriber[,c(4,5,11:23)], by=c("city"="city", "start_date"="start_date"))
+CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(3:16)]
+test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
+cor(x=test1[,c(3:17)],y=test1[,c(1,2)],use="pairwise.complete.obs") %>%
+  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
+             title = "Weather and Trip Variable Correlation for Subscribers",
+             colors = c("blue", "white", "red"))
+
+
+# correlation for city and weather
 CorrelationWeatherAndTripData1 <- CityZipData[,c(4,11:22)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(7:17)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
+cor(x=test1[,c(7:17)],y=test1[,c(1:5)],use="pairwise.complete.obs") %>%
   ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
-             title = "Weather and Trip Variable Correlation",
+             title = "Weather and Starting City Correlation",
              colors = c("blue", "white", "red"))
 
 
@@ -446,40 +485,4 @@ summary(TripDurationLinearModel2)
 
 TripDurationLinearModel3 <- lm(as.numeric(TripDuration) ~ mean_visibility_miles+precipitation_inches+events, data=CityZipData)
 summary(TripDurationLinearModel3)
-
-# It is plausible that customers and subscribers behave differently, and have different purposes for using bikes (i.e. recreation vs work)
-
-CityZipDataCustomer <- CityZipData[CityZipData$subscription_type=="Customer",]
-CorrelationWeatherAndTripData1 <- CityZipDataCustomer[,c(4,11:23,25)]
-test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(7:20,22:26)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
-  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
-             title = "Weather and Trip Variable Correlation",
-             colors = c("blue", "white", "red"))
-
-CityZipDataSubscriber <- CityZipData[CityZipData$subscription_type=="Subscriber",]
-CorrelationWeatherAndTripData1 <- CityZipDataSubscriber[,c(4,11:23,25)]
-test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(7:20,22:26)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
-  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
-             title = "Weather and Trip Variable Correlation",
-             colors = c("blue", "white", "red"))
-
-NewWeatherTripData <- ddply(CityZipData[,c(4,5,11:22)],.(city,start_date),nrow)
-NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CleanedWeather, by=c("city"="city", "start_date"="date"))
-CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(3:17)]
-test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(2:16,18:23)],y=test1[,c(1)],use="pairwise.complete.obs") %>%
-  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
-             title = "Weather and Trip Variable Correlation",
-             colors = c("blue", "white", "red"))
-
-NewWeatherTripData <- ddply(CityZipData[,c(4,5,11:22)],.(city,start_date),nrow)
-NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CleanedWeather, by=c("city"="city", "start_date"="date"))
-CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(1,3:17)]
-test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
-cor(x=test1[,c(7:20)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
-  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
-             title = "Weather and Trip Variable Correlation",
-             colors = c("blue", "white", "red"))
 
