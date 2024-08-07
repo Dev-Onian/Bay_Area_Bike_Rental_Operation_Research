@@ -84,6 +84,18 @@ TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTr
 # Place these extreme values in a new data frame
 TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
 
+Reduced = 1 # USER INPUT REQUIRED: do you want to run the analysis with extreme values or not?
+
+if (Reduced == 1){
+  # determine which trip durations fall outside of the upper bounds of the 95% confidence interval
+  TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTrip$TripDuration,probs=0.975)) #this will include the outliers as well
+  # Place the outliers in a new data frame
+  TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
+  
+  CleanedTrip <- CleanedTrip[-TripDurationExtremeIndices,] #remove the outlier indices from the main cleaned dataframe
+}
+
+
 # 4. Record and remove "cancelled trips" (i.e., any trip <3 minutes)
 
 CancelledTripIndices <- which(CleanedTrip$TripDuration<as.difftime(3,units="mins"))

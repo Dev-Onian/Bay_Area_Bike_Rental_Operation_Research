@@ -67,17 +67,21 @@ CleanedTrip <- mutate(CleanedTrip, TripDuration = (CleanedTrip$end_date-CleanedT
 StationName <- unique(CleanedTrip$start_station_name)
 plot(CleanedStation$long,CleanedStation$lat, xlab = "Longitude", ylab = "Latitude", main = "Station Coordinates")
 
-# figure out which trips lasted longer than 1 day
+# figure out which trips lasted longer than 1 month
 TripDurationOutlierIndices <- which(CleanedTrip$TripDuration>as.difftime(43200,units="mins"))
 TripDurationOutliers <- CleanedTrip[TripDurationOutlierIndices,]
 # 1440 minutes constitutes a full day of bike renting - Bay Area bike rental lengths usually go up to full-day or 24 hours (though there are some that can be rented on a weekly, or even monthly basis) - https://www.lyft.com/bikes/bay-wheels/sf-bike-rental
 
+Reduced = 0
+
+if (Reduced == 1){
 # determine which trip durations fall outside of the upper bounds of the 95% confidence interval
 TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTrip$TripDuration,probs=0.975)) #this will include the outliers as well
 # Place the outliers in a new data frame
 TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
 
 CleanedTrip <- CleanedTrip[-TripDurationExtremeIndices,] #remove the outlier indices from the main cleaned dataframe
+}
 
 # Record and remove "cancelled trips" (i.e., any trip <3 minutes)
 CancelledTripIndices <- which(CleanedTrip$TripDuration<as.difftime(3,units="mins"))
@@ -97,11 +101,6 @@ CorrelationWeatherAndTripData1 <- CityZipData[,c(4,10:22,24)]
 test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
 cor(x=test1[,c(7:27)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
     ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
-               title = "Weather and Trip Variable Correlation",
-               colors = c("blue", "white", "red"))
-
-cor(test1,use="pairwise.complete.obs") %>%
-ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
                title = "Weather and Trip Variable Correlation",
                colors = c("blue", "white", "red"))
 
@@ -146,6 +145,11 @@ cor(x=test[,c(66:71)],y=test[,c(72:85)],use="pairwise.complete.obs") %>%
 TripDurationLinearModel <- lm(as.numeric(TripDuration) ~ max_temperature_f+mean_temperature_f+min_temperature_f+max_visibility_miles+mean_visibility_miles+min_visibility_miles+max_wind_Speed_mph+mean_wind_speed_mph+max_gust_speed_mph+precipitation_inches+cloud_cover+events, data=CityZipData)
 summary(TripDurationLinearModel)
 
+TripDurationLinearModel2 <- lm(as.numeric(TripDuration) ~ mean_visibility_miles+precipitation_inches+cloud_cover+events, data=CityZipData)
+summary(TripDurationLinearModel2)
+
+TripDurationLinearModel3 <- lm(as.numeric(TripDuration) ~ mean_visibility_miles+precipitation_inches+events, data=CityZipData)
+summary(TripDurationLinearModel3)
 
 NewWeatherTripData <- CityZipData[,c(4,5,11:22)]
 
