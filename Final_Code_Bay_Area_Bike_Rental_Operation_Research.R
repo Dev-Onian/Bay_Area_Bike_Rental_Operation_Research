@@ -204,6 +204,7 @@ if (Reduced == 1){
   TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTrip$TripDuration,probs=0.975)) #this will include the outliers as well
   # Place the outliers in a new data frame
   TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
+  freq(TripDurationExtremeValues$subscription_type) 
   CleanedTrip <- CleanedTrip[-TripDurationExtremeIndices,] #remove the outlier indices from the main cleaned dataframe
 }
 
@@ -292,8 +293,9 @@ CleanedTrip <- mutate(CleanedTrip, Month = month(CleanedTrip$start_date)) #which
 # calculate the length of time a bike was used according to the bike ID
 BikeIDMonthUseBase <- aggregate(TripDuration~bike_id+Month,CleanedTrip,FUN=sum)
 
-BikeIDMonthUseBase
-ggplot(BikeIDMonthUseBase, mapping = aes(x=Month, y=as.numeric(TripDuration))) + geom_point()
+BikeIDMonthUseBaseNamed <- BikeIDMonthUseBase[]
+BikeIDMonthUseBaseNamed$Month <- month(BikeIDMonthUseBaseNamed$Month, label=TRUE)
+ggplot(BikeIDMonthUseBaseNamed, mapping = aes(x=Month, y=as.numeric(TripDuration))) + geom_point()
 
 BikeIDMonthUse <- pivot_wider(BikeIDMonthUseBase,names_from = Month, values_from = TripDuration)
 # 2014 was not a leap year, hence February has 28 days
