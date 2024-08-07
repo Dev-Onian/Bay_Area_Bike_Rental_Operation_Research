@@ -14,6 +14,7 @@ library(tidyr)
 library(ivs)
 library(corrplot)
 library(ggcorrplot)
+library(plyr)
 
 # THE FOLLOWING EDA WILL EXAMINE STATION DATA, TRIP DATA, AND WEATHER DATA
 # b) Examine data, make sure there is enough for suitable analysis, make sure everything is the right form
@@ -170,19 +171,25 @@ plot(CleanedWeather$date,CleanedWeather$cloud_cover, xlab="Date", ylab="Cloud Co
 
 # f) Analyze categorical and numerical variables at the same time: get a sense of all the variables to be analyzed
 
-basic_eda <- function(data)
-{
-  glimpse(data)
-  print(status(data))
-  freq(data) 
-  print(profiling_num(data))
-  plot_num(data)
-  describe(data)
-}
+glimpse(CleanedStation)
+print(status(CleanedStation))
+freq(CleanedStation) 
+print(profiling_num(CleanedStation))
+plot_num(CleanedStation[,c(1:6)])
+describe(CleanedStation)
 
-basic_eda(CleanedStation)
-basic_eda(CleanedTrip)
-basic_eda(CleanedWeather)
+glimpse(CleanedTrip)
+print(status(CleanedTrip))
+freq(CleanedTrip[,c(2:8,10)]) 
+print(profiling_num(CleanedTrip))
+describe(CleanedTrip[,c(1:2,4:5,7:11)])
+
+glimpse(CleanedWeather)
+print(status(CleanedWeather))
+freq(CleanedWeather) 
+print(profiling_num(CleanedWeather))
+plot_num(CleanedWeather[,c(2:16)])
+describe(CleanedWeather[,c(2:16)])
 
 # 3. Record trip IDs for outliers, and then remove them. What are the rules for outliers? Outside of 95% of the data? Or a different metric?
 CleanedTrip <- mutate(CleanedTrip, TripDuration = (CleanedTrip$end_date-CleanedTrip$start_date))
@@ -345,36 +352,37 @@ AverageBikeUsage <- rbind(cbind(mean(as.numeric(unlist(TopJanuaryBikes[,2])), na
                                 mean(as.numeric(unlist(TopDecemberBikes[,2])), na.rm=T)),c(1:12))
 plot(x = AverageBikeUsage[2,], y= AverageBikeUsage[1,]*100, xlab="Month", ylab="Average Monthly Bike Utilization (%)", main="Average Bike Usage per Month")
 
-TransposeTest <- as.data.frame(t(BikeIDMonthUse[,-1]))
-colnames(TransposeTest) <- BikeIDMonthUse$bike_id
-
-# Calculate bike usage independent of ID
-
-OverallBikeUsage <- CleanedTrip[,c(3,6,15)]
-OverallBikeUsage <- mutate(OverallBikeUsage, TripInterval = iv(OverallBikeUsage$start_date,OverallBikeUsage$end_date))
-OverallBikeUsage <- OverallBikeUsage %>%
-  group_by(Month) %>%
-  reframe(TripInterval = iv_groups(TripInterval))
-
-OverallBikeUsage <- mutate(OverallBikeUsage, TripDuration = (iv_end(TripInterval)-iv_start(TripInterval)))
-OverallBikeUsage <- aggregate(TripDuration~Month,OverallBikeUsage,FUN=sum)
-
-#MonthDurations <- as.numeric(MonthDurations)
-OverallBikeUsage <- c(OverallBikeUsage[1,2]/MonthDurations[1],
-                      OverallBikeUsage[2,2]/MonthDurations[2],
-                      OverallBikeUsage[3,2]/MonthDurations[3],
-                      OverallBikeUsage[4,2]/MonthDurations[4],
-                      OverallBikeUsage[5,2]/MonthDurations[5],
-                      OverallBikeUsage[6,2]/MonthDurations[6],
-                      OverallBikeUsage[7,2]/MonthDurations[7],
-                      OverallBikeUsage[8,2]/MonthDurations[8],
-                      OverallBikeUsage[9,2]/MonthDurations[9],
-                      OverallBikeUsage[10,2]/MonthDurations[10],
-                      OverallBikeUsage[11,2]/MonthDurations[11],
-                      OverallBikeUsage[12,2]/MonthDurations[12])
-OverallBikeUsage <- cbind(OverallBikeUsage,c(1:12))
-plot(x = OverallBikeUsage[,2], y= OverallBikeUsage[,1]*100, xlab="Month", ylab="Monthly Bike Utilization (%)", main="Bike Usage per Month")
-
+if (Reduced==1){ #This only works for the reduced dataset, otherwise the trips last so long that they spill over into other months
+    TransposeTest <- as.data.frame(t(BikeIDMonthUse[,-1]))
+    colnames(TransposeTest) <- BikeIDMonthUse$bike_id
+    
+    # Calculate bike usage independent of ID
+    
+    OverallBikeUsage <- CleanedTrip[,c(3,6,15)]
+    OverallBikeUsage <- mutate(OverallBikeUsage, TripInterval = iv(OverallBikeUsage$start_date,OverallBikeUsage$end_date))
+    OverallBikeUsage <- OverallBikeUsage %>%
+      group_by(Month) %>%
+      reframe(TripInterval = iv_groups(TripInterval))
+    
+    OverallBikeUsage <- mutate(OverallBikeUsage, TripDuration = (iv_end(TripInterval)-iv_start(TripInterval)))
+    OverallBikeUsage <- aggregate(TripDuration~Month,OverallBikeUsage,FUN=sum)
+    
+    #MonthDurations <- as.numeric(MonthDurations)
+    OverallBikeUsage <- c(OverallBikeUsage[1,2]/MonthDurations[1],
+                          OverallBikeUsage[2,2]/MonthDurations[2],
+                          OverallBikeUsage[3,2]/MonthDurations[3],
+                          OverallBikeUsage[4,2]/MonthDurations[4],
+                          OverallBikeUsage[5,2]/MonthDurations[5],
+                          OverallBikeUsage[6,2]/MonthDurations[6],
+                          OverallBikeUsage[7,2]/MonthDurations[7],
+                          OverallBikeUsage[8,2]/MonthDurations[8],
+                          OverallBikeUsage[9,2]/MonthDurations[9],
+                          OverallBikeUsage[10,2]/MonthDurations[10],
+                          OverallBikeUsage[11,2]/MonthDurations[11],
+                          OverallBikeUsage[12,2]/MonthDurations[12])
+    OverallBikeUsage <- cbind(OverallBikeUsage,c(1:12))
+    plot(x = OverallBikeUsage[,2], y= OverallBikeUsage[,1]*100, xlab="Month", ylab="Monthly Bike Utilization (%)", main="Bike Usage per Month")
+}
 # 9. Create a new dataset combining trip data with weather data. Weather data is available for each city and date. The cor function from the Corrplot package will be useful for creating a correlation matrix. Deal with the fact that it is difficult to correlate categorical and non-categorical variables. Some trips start and end in different cities, will need to explain how to correlate weather data with trip data if the trip is crossing cities - may have implications for how the two datasets are joined
 
 # Need to make the dates applicable in teh trip dataset so that they work with the weather dataset
@@ -458,6 +466,21 @@ cor(x=test1[,c(7:27)],y=test1[,c(1:6)],use="pairwise.complete.obs") %>%
              colors = c("blue", "white", "red"))
 
 
+NewWeatherTripData <- ddply(CityZipData[,c(4,5,11:22)],.(city,start_date),nrow)
+NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CleanedWeather, by=c("city"="city", "start_date"="date"))
+CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(3:17)]
+test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
+cor(x=test1[,c(2:24)],y=test1[,c(1)],use="pairwise.complete.obs") %>%
+  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
+             title = "Weather and Trip Variable Correlation",
+             colors = c("blue", "white", "red"))
 
-
+NewWeatherTripData <- ddply(CityZipData[,c(4,5,11:22)],.(city,start_date),nrow)
+NewWeatherTripData <- left_join(x=NewWeatherTripData, y=CityZipData[,c(4:25)], by=c("city"="city", "start_date"="start_date"))
+CorrelationWeatherAndTripData1 <- NewWeatherTripData[,c(1,3,9:21)]
+test1 <- model.matrix(~0+., data=CorrelationWeatherAndTripData1)
+cor(x=test1[,c(8:22)],y=test1[,c(1:7)],use="pairwise.complete.obs") %>%
+  ggcorrplot(show.diag=NULL, type="full", lab=TRUE, lab_size=2,
+             title = "Weather and Trip Variable Correlation",
+             colors = c("blue", "white", "red"))
 
