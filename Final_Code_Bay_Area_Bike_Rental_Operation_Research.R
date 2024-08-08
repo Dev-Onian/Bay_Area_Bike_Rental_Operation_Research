@@ -296,6 +296,12 @@ WeekendTrips <- mutate(WeekendTrips,Day = wday(WeekendTrips$start_date))
 TopWeekendTripsStartingStations <- dplyr::count(WeekendTrips,start_station_name,sort = TRUE)
 TopWeekendTripsEndingStations <- dplyr::count(WeekendTrips,end_station_name,sort = TRUE)
 
+# Determine what the breakdown of subscribers and customers is across weekdays and weekends
+WeekdaySubscribers <- sum(WeekdayTrips$subscription_type=="Subscriber")
+WeekdayCustomers <- sum(WeekdayTrips$subscription_type=="Customer")
+WeekendSubscribers <- sum(WeekendTrips$subscription_type=="Subscriber")
+WeekendCustomers <- sum(WeekendTrips$subscription_type=="Customer")
+
 # 8. Determine the average utilization of bikes for each month (total time bikes were used/total time in the month)
 
 CleanedTrip <- mutate(CleanedTrip, Month = month(CleanedTrip$start_date)) #which month does the trip take place in?
