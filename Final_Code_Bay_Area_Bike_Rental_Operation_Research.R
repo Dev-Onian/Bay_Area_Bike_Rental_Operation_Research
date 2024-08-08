@@ -22,7 +22,7 @@ library(plyr)
 #load in the data in the csv file into a separate variable before examining the data
 RawStation <- read.csv("station.csv")
 summary(RawStation)
-sum(as.character(RawStation$id) == "") #equals 0 as there are no missing values that aren't coded as NA
+sum(as.character(RawStation$id) == "") #if this equals 0 then there are no missing values that aren't coded as NA
 sum(as.character(RawStation$name) == "")
 sum(as.character(RawStation$lat) == "")
 sum(as.character(RawStation$long) == "")
@@ -62,6 +62,7 @@ CleanedStation$id <- factor(CleanedStation$id)
 CleanedStation$name <- factor(CleanedStation$name)
 CleanedStation$city <- factor(CleanedStation$city)
 CleanedStation$installation_date <- strptime(CleanedStation$installation_date, format = "%m/%d/%Y")
+summary(CleanedStation) # ensure that the variables in station are coded properly
 
 CleanedTrip <- RawTrip
 CleanedTrip$id <- factor(CleanedTrip$id)
@@ -71,10 +72,10 @@ CleanedTrip$end_station_name <- factor(CleanedTrip$end_station_name)
 CleanedTrip$end_station_id <- factor(CleanedTrip$end_station_id)
 CleanedTrip$bike_id <- factor(CleanedTrip$bike_id)
 CleanedTrip$subscription_type <- factor(CleanedTrip$subscription_type)
-CleanedTrip$zip_code <- factor(CleanedTrip$zip_code)
+CleanedTrip$zip_code <- factor(CleanedTrip$zip_code) #zip codes should be factors instead of numbers as they represent locations instead of numerical values
 CleanedTrip$start_date <- strptime(RawTrip$start_date, format = "%m/%d/%Y %H:%M")
 CleanedTrip$end_date <- strptime(RawTrip$end_date, format = "%m/%d/%Y %H:%M")
-summary(CleanedTrip)
+summary(CleanedTrip) # ensure that the variables in trip are coded properly
 
 CleanedWeather <- RawWeather
 CleanedWeather$date <- strptime(CleanedWeather$date, format = "%m/%d/%Y") #convert the dates from strings to POSIX values for later processing
@@ -84,6 +85,7 @@ CleanedWeather$events[CleanedWeather$events==""]="Not Recorded"
 CleanedWeather$events[CleanedWeather$events=="rain"]="Rain"
 CleanedWeather$events <- factor(CleanedWeather$events)
 CleanedWeather$city <- factor(CleanedWeather$city)
+summary(CleanedWeather) # ensure that the variables in weather are coded properly
 
 # d) Analyze categorical variables: do the categories make sense? Missingness?
 
@@ -105,7 +107,7 @@ summary(CleanedWeather$events)
 # - Rain: any amount of precipitation, even trace
 # - Thunderstorm: hot temperatures, cloud cover, wind-speed, but highly variable
 
-CleanedWeather <- mutate(CleanedWeather, ImputedEvents = case_when(
+CleanedWeather <- mutate(CleanedWeather, ImputedEvents = case_when( #code for the combinations of recorded precipitation and visibility variables
   precipitation_inches=0 & min_visibility_miles<0.62 ~ "Fog",
   precipitation_inches=0 & min_visibility_miles<1.2 & min_visibility_miles>0.62 ~ "Mist",
   precipitation_inches=0 & min_visibility_miles<3.1 & min_visibility_miles>1.2 ~ "Haze",
@@ -136,8 +138,9 @@ ggplot(CleanedStation, mapping = aes(x=long, y=lat, col = dock_count)) + geom_po
 # It doesn't make sense to remove outliers given these are descriptive counting numbers: the latitude, longitude, number of docks, and are unlikely to reflect an error in measurement. Even if there is a higher-than-average number of docks, there is no clear reason as to why it should be excluded, or how it will negatively affect the analysis 
 
 summary(CleanedWeather$max_temperature_f) #examine the range of maximum temperatures
-sd(CleanedWeather$max_temperature_f)
+sd(CleanedWeather$max_temperature_f) #determine teh standard deviation of the maximum temperatures
 plot(CleanedWeather$date,CleanedWeather$max_temperature_f, xlab="Date", ylab="Maximum Temperature (F)")
+# repeat this analysis for the other weather variables
 summary(CleanedWeather$mean_temperature_f)
 sd(CleanedWeather$mean_temperature_f)
 plot(CleanedWeather$date,CleanedWeather$mean_temperature_f, xlab="Date", ylab="Mean Temperature (F)")
@@ -171,7 +174,7 @@ plot(CleanedWeather$date,CleanedWeather$cloud_cover, xlab="Date", ylab="Cloud Co
 
 # Remove weather days that reflect days that have tropical storm level weather conditions
 HurricaneWindIndices <- which(CleanedWeather$max_wind_Speed_mph>50) # Tropical storms have winds in excess of 50 mph - https://www.weather.gov/lix/htiwind#:~:text=Hurricane%20winds%2074%20to%2090,of%20mobile%20homes%20is%20likely.
-HurricaneWinds <- CleanedWeather[HurricaneWindIndices,]
+HurricaneWinds <- CleanedWeather[HurricaneWindIndices,] #store the tropical storm indices
 CleanedWeather <- CleanedWeather[-HurricaneWindIndices,]
 
 HurricaneGustIndices <- which(CleanedWeather$max_gust_speed_mph>65) # Tropical storms are where gusts begin to exceed 65 mph - https://www.weather.gov/lix/htiwind#:~:text=Hurricane%20winds%2074%20to%2090,of%20mobile%20homes%20is%20likely.
@@ -181,6 +184,7 @@ CleanedWeather <- CleanedWeather[-HurricaneGustIndices,]
 
 # f) Analyze categorical and numerical variables at the same time: get a sense of all the variables to be analyzed
 
+# examine and plot the frequencies, range of values, and data types for the 3 cleaned datasets
 glimpse(CleanedStation)
 print(status(CleanedStation))
 freq(CleanedStation) 
@@ -221,8 +225,8 @@ if (Reduced == 1){
 # 4. Record and remove "cancelled trips" (i.e., any trip <3 minutes)
 
 CancelledTripIndices <- which(CleanedTrip$TripDuration<as.difftime(3,units="mins")) #find which trips lasted less than 3 minutes
-CancelledTripValues <- CleanedTrip[CancelledTripIndices,]
-CleanedTrip <- CleanedTrip[-CancelledTripIndices,]
+CancelledTripValues <- CleanedTrip[CancelledTripIndices,] #store the cancelled trips in a separate array
+CleanedTrip <- CleanedTrip[-CancelledTripIndices,] #remove cancelled trips from the main dataset
 
 boxplot(CleanedTrip$TripDuration, #plot the final distribution of trips
         ylab = "Duration (mins)"
@@ -254,39 +258,39 @@ CleanedTrip <- mutate(CleanedTrip, ShiftedTripInterval = testshift) #add these s
 
 RushHours <- data.frame(Interval = as.character(ListOfTimes[1]), NumberOfTrips = sum(int_overlaps(ListOfTimes[1],testshift))) #determine how many trips fall into the first interval
 for (i in 1:95){ #determine how many trips fall within the subsequent 95 intervals
-  Interval = as.character(ListOfTimes[i+1])
-  NumberOfTrips = sum(int_overlaps(ListOfTimes[i+1],testshift))
-  RushHours[i+1,] = list(Interval,NumberOfTrips)
+  Interval = as.character(ListOfTimes[i+1]) #establish the new interval
+  NumberOfTrips = sum(int_overlaps(ListOfTimes[i+1],testshift)) #determine which times overlap with this reference interval
+  RushHours[i+1,] = list(Interval,NumberOfTrips) #add the number of trips that overlapped with the interval into the next row of RushHours
 }
 
 RushHours <- cbind.data.frame(RushHours,POSIXInterval = ListOfTimes) #add the original reference list of times to the rush hours interval
 
-RushHourTimes <-RushHours[which(RushHours$NumberOfTrips>=quantile(RushHours$NumberOfTrips,probs=0.8)),]
-RushHourCutoff <- quantile(RushHours$NumberOfTrips,probs=0.8)
+RushHourTimes <-RushHours[which(RushHours$NumberOfTrips>=quantile(RushHours$NumberOfTrips,probs=0.8)),] #which times are in the 80th percentile or higher for number of trips
+RushHourCutoff <- quantile(RushHours$NumberOfTrips,probs=0.8) #what is the 80th percentile for rush hours, what is the cutoff between non rush hours and rush hours?
 
 RushHours$Interval <- str_remove_all(RushHours$Interval,"\\d{4}[-]\\d{2}[-]\\d{2}") #remove the dates from the rush hour intervals, as these will serve as the x axis values for the graph
-RushHours$Interval <- str_remove_all(RushHours$Interval,"[:]\\d{2}[ ]")
+RushHours$Interval <- str_remove_all(RushHours$Interval,"[:]\\d{2}[ ]") # remove the seconds for ease of ditting the intervals on teh x axis
 RushHours$Interval[1] <- "00:00EST--00:15EST" #account for the fact that the first and last intervals won't be formatted properly
 RushHours$Interval[96] <- "23:45EST--00:00EST"
 
-cols <- c("white", "red")[(RushHours$NumberOfTrips > RushHourCutoff) + 1]  
+cols <- c("white", "red")[(RushHours$NumberOfTrips > RushHourCutoff) + 1]   # mark the rush hours as red
 par(mar=c(6,4,4,1))
-barplot(RushHours$NumberOfTrips, col = cols, names.arg=unlist(RushHours$Interval),las=2,
+barplot(RushHours$NumberOfTrips, col = cols, names.arg=unlist(RushHours$Interval),las=2, #plot the rush hours
         ylab = "Number of Trips",
         main = "Bike Usage Stratified By Time",
         cex.names=0.5)
 
 # 6. Determine 10 most frequent starting and ending stations during rush hours
-WeekdayTrips <- CleanedTrip[-which(wday(CleanedTrip$start_date)==1 | wday(CleanedTrip$start_date)==7),]
+WeekdayTrips <- CleanedTrip[-which(wday(CleanedTrip$start_date)==1 | wday(CleanedTrip$start_date)==7),] #separate the trips that DON'T take place on Saturday or Sunday
 
-RushHourTripIndices <- int_overlaps(RushHourTimes$POSIXInterval[1],WeekdayTrips$ShiftedTripInterval)
+RushHourTripIndices <- int_overlaps(RushHourTimes$POSIXInterval[1],WeekdayTrips$ShiftedTripInterval) #find the trips that take place during rush hours from the weekday subset
 for (i in 1:nrow(RushHourTimes)){
   RushHourTripIndices <- append(RushHourTripIndices,int_overlaps(RushHourTimes$POSIXInterval[i],WeekdayTrips$ShiftedTripInterval))
 } #Get an index of every trip that occurred during rush hour
 
-RushHourTrips <- WeekdayTrips[RushHourTripIndices,]
+RushHourTrips <- WeekdayTrips[RushHourTripIndices,] #create a subset of trips that take place during rush hours on weekdays
 (RushHourTrips$start_station_name)
-TopRushHourStartingStations <- dplyr::count(RushHourTrips,start_station_name,sort = TRUE)
+TopRushHourStartingStations <- dplyr::count(RushHourTrips,start_station_name,sort = TRUE) #sort the trips in order of most common starting station
 TopRushHourEndingStations <- dplyr::count(RushHourTrips,end_station_name,sort = TRUE)
 
 # 7. Determine 10 most frequent starting and ending stations during the weekends
@@ -317,6 +321,9 @@ BikeIDMonthUse <- pivot_wider(BikeIDMonthUseBase,names_from = Month, values_from
 # 2014 was not a leap year, hence February has 28 days
 MonthDurations <- as.duration(days_in_month(1:12)*86400) #how many seconds are in each month?
 
+#' calculate the ratio between the collective bike usage over the course of a 
+#' month and the length of that month. In essence, for how much of a month are
+#' there bikes in use?
 BikeIDMonthUse[,2] <- BikeIDMonthUse[,2]/MonthDurations[1]
 BikeIDMonthUse[,3] <- BikeIDMonthUse[,3]/MonthDurations[2]
 BikeIDMonthUse[,4] <- BikeIDMonthUse[,4]/MonthDurations[3]
@@ -330,6 +337,7 @@ BikeIDMonthUse[,11] <- BikeIDMonthUse[,11]/MonthDurations[10]
 BikeIDMonthUse[,12] <- BikeIDMonthUse[,12]/MonthDurations[11]
 BikeIDMonthUse[,13] <- BikeIDMonthUse[,13]/MonthDurations[12]
 
+# calculate the most used bikes for each month, whichever have the longest cumulative trip durations
 TopJanuaryBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,2)], desc(BikeIDMonthUse[,2]))
 TopFebruaryBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,3)], desc(BikeIDMonthUse[,3]))
 TopMarchBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,4)], desc(BikeIDMonthUse[,4]))
@@ -343,6 +351,7 @@ TopOctoberBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,11)], desc(BikeIDMonthUse[
 TopNovemebrBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,12)], desc(BikeIDMonthUse[,12]))
 TopDecemberBikes <- dplyr::arrange(BikeIDMonthUse[,c(1,13)], desc(BikeIDMonthUse[,13]))
 
+# bind the rows of top monthly bikes together to get an ordered list of all bikes for all months
 TopBikes <- cbind(TopJanuaryBikes$bike_id,
                   TopFebruaryBikes$bike_id,
                   TopMarchBikes$bike_id,
@@ -356,6 +365,8 @@ TopBikes <- cbind(TopJanuaryBikes$bike_id,
                   TopNovemebrBikes$bike_id,
                   TopDecemberBikes$bike_id)
 
+# calculate the average cumulative trip duration for each bike per month by unlisting
+# and averaging out each ordered list of bikes in each month
 AverageBikeUsage <- rbind(cbind(mean(as.numeric(unlist(TopJanuaryBikes[,2])), na.rm=T),
                                 mean(as.numeric(unlist(TopFebruaryBikes[,2])), na.rm=T),
                                 mean(as.numeric(unlist(TopMarchBikes[,2])), na.rm=T),
@@ -402,6 +413,15 @@ if (Reduced==1){ #This only works for the reduced dataset, otherwise the trips l
     plot(x = OverallBikeUsage[,2], y= OverallBikeUsage[,1]*100, xlab="Month", ylab="Monthly Bike Utilization (%)", main="Bike Usage per Month")
 }
 # 9. Create a new dataset combining trip data with weather data. Weather data is available for each city and date. The cor function from the Corrplot package will be useful for creating a correlation matrix. Deal with the fact that it is difficult to correlate categorical and non-categorical variables. Some trips start and end in different cities, will need to explain how to correlate weather data with trip data if the trip is crossing cities - may have implications for how the two datasets are joined
+
+#' Focus on the starting dates for trips, rather than teh ending dates. Given the
+#' purpose of this analysis, it is more reasonable that the initial weather
+#' conditions will have a greater impact on whether a trip begins or not, rather
+#' than the end weather. If the weather is poor, it may discourage someone from
+#' using a bike. If the weather is favourable, it may encourage them to bike
+#' instead of drive or take public transit. Now it is true that weather may impact
+#' when someone returns a bike, but to account for that the analysis will also
+#' look at how the initial weather conditions impact trip duration
 
 # Need to make the dates applicable in teh trip dataset so that they work with the weather dataset
 CleanedTrip$start_date <- floor_date(CleanedTrip$start_date, "day") #make the start dates applicable for comparison with the dates shown in the weather data
@@ -457,6 +477,9 @@ cor(x=test1[,c(7:17)],y=test1[,c(1:5)],use="pairwise.complete.obs") %>%
              title = "Weather and Starting City Correlation",
              colors = c("blue", "white", "red"))
 
+
+# perform individual correlations for each station and weather
+# the results are essentially no correlation with any weather
 
 CorrelationWeatherAndTripData <- CityZipData[,c(1,11:22)]
 test <- model.matrix(~0+., data=CorrelationWeatherAndTripData)
