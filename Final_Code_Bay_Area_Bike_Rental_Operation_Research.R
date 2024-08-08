@@ -167,7 +167,7 @@ sd(CleanedWeather$precipitation_inches)
 plot(CleanedWeather$date,CleanedWeather$precipitation_inches, xlab="Date", ylab="Precipitation (inches)")
 summary(CleanedWeather$cloud_cover)
 sd(CleanedWeather$cloud_cover)
-plot(CleanedWeather$date,CleanedWeather$cloud_cover, xlab="Date", ylab="Cloud Cover")
+plot(CleanedWeather$date,CleanedWeather$cloud_cover, xlab="Date", ylab="Cloud Cover (Oktas)")
 
 # Remove weather days that reflect days that have tropical storm level weather conditions
 HurricaneWindIndices <- which(CleanedWeather$max_wind_Speed_mph>50) # Tropical storms have winds in excess of 50 mph - https://www.weather.gov/lix/htiwind#:~:text=Hurricane%20winds%2074%20to%2090,of%20mobile%20homes%20is%20likely.
