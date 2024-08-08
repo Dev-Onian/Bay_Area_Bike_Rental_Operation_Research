@@ -169,6 +169,16 @@ summary(CleanedWeather$cloud_cover)
 sd(CleanedWeather$cloud_cover)
 plot(CleanedWeather$date,CleanedWeather$cloud_cover, xlab="Date", ylab="Cloud Cover")
 
+# Remove weather days that reflect days that have tropical storm level weather conditions
+HurricaneWindIndices <- which(CleanedWeather$max_wind_Speed_mph>50) # Tropical storms have winds in excess of 50 mph - https://www.weather.gov/lix/htiwind#:~:text=Hurricane%20winds%2074%20to%2090,of%20mobile%20homes%20is%20likely.
+HurricaneWinds <- CleanedWeather[HurricaneWindIndices,]
+CleanedWeather <- CleanedWeather[-HurricaneWindIndices,]
+
+HurricaneGustIndices <- which(CleanedWeather$max_gust_speed_mph>65) # Tropical storms are where gusts begin to exceed 65 mph - https://www.weather.gov/lix/htiwind#:~:text=Hurricane%20winds%2074%20to%2090,of%20mobile%20homes%20is%20likely.
+HurricaneGusts <- CleanedWeather[HurricaneGustIndices,]
+CleanedWeather <- CleanedWeather[-HurricaneGustIndices,]
+
+
 # f) Analyze categorical and numerical variables at the same time: get a sense of all the variables to be analyzed
 
 glimpse(CleanedStation)
