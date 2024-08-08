@@ -487,14 +487,3 @@ cor(x=test[,c(66:71)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
 
-# Linear model
-
-TripDurationLinearModel <- lm(as.numeric(TripDuration) ~ max_temperature_f+mean_temperature_f+min_temperature_f+max_visibility_miles+mean_visibility_miles+min_visibility_miles+max_wind_Speed_mph+mean_wind_speed_mph+max_gust_speed_mph+precipitation_inches+cloud_cover+events, data=CityZipData)
-summary(TripDurationLinearModel)
-
-TripDurationLinearModel2 <- lm(as.numeric(TripDuration) ~ mean_visibility_miles+precipitation_inches+cloud_cover+events, data=CityZipData)
-summary(TripDurationLinearModel2)
-
-TripDurationLinearModel3 <- lm(as.numeric(TripDuration) ~ mean_visibility_miles+precipitation_inches+events, data=CityZipData)
-summary(TripDurationLinearModel3)
-
