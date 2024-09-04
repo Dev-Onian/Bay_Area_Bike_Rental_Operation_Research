@@ -84,6 +84,7 @@ TripDurationExtremeIndices <- which(CleanedTrip$TripDuration>=quantile(CleanedTr
 # Place these extreme values in a new data frame
 TripDurationExtremeValues <- CleanedTrip[setdiff(TripDurationExtremeIndices,TripDurationOutlierIndices),]
 
+# SK Good idea to give yourself/team options
 Reduced = 1 # USER INPUT REQUIRED: do you want to run the analysis with extreme values or not?
 
 if (Reduced == 1){
@@ -271,3 +272,5 @@ OverallBikeUsage <- c(OverallBikeUsage[1,2]/MonthDurations[1],
                       OverallBikeUsage[12,2]/MonthDurations[12])
 OverallBikeUsage <- cbind(OverallBikeUsage,c(1:12))
 plot(x = OverallBikeUsage[,2], y= OverallBikeUsage[,1]*100, xlab="Month", ylab="Monthly Bike Utilization (%)", main="Bike Usage per Month")
+
+# SK Very detailed utilization calculations!

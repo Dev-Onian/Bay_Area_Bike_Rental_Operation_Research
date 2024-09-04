@@ -26,6 +26,7 @@ sum(as.character(RawWeather$cloud_cover) == "")
 # c) Clean a copy of the data, including removing outliers - note what was changed
 CleanedWeather <- RawWeather
 CleanedWeather$date <- strptime(CleanedWeather$date, format = "%m/%d/%Y")
+# SK I prefer you use <- instead of =
 CleanedWeather$precipitation_inches[CleanedWeather$precipitation_inches=="T"]=0.001
 CleanedWeather$precipitation_inches <- as.numeric(CleanedWeather$precipitation_inches)
 CleanedWeather$events[CleanedWeather$events==""]="Not Recorded"
@@ -45,6 +46,7 @@ summary(CleanedWeather$events)
 #   water droplets so for forms small tiny ice crystals.
 # - Rain: any amount of precipitation, even trace
 # - Thunderstorm: hot temperatures, cloud cover, wind-speed, but highly variable
+# SK Good research ^ here. Good idea to keep imputed events in a separate column.
 
 CleanedWeather <- mutate(CleanedWeather, ImputedEvents = case_when(
   precipitation_inches=0 & min_visibility_miles<0.62 ~ "Fog",

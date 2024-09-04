@@ -26,6 +26,7 @@ sum(as.character(RawTrip$subscription_type) == "")
 # c) Clean a copy of the data, including removing outliers - note what was changed
 
 CleanedTrip <- RawTrip
+# SK Id columns typically are unique for each row and factoring them is not helpful.
 CleanedTrip$id <- factor(CleanedTrip$id)
 CleanedTrip$start_station_name <- factor(CleanedTrip$start_station_name)
 CleanedTrip$start_station_id <- factor(CleanedTrip$start_station_id)
@@ -66,4 +67,8 @@ CleanedTrip <- CleanedTrip[-TripDurationOutlierIndices,] #remove the outlier ind
 
 
 # f) Analyze categorical and numerical variables at the same time: get a sense of all the variables to be analyzed
+
+# SK good job with the outlier analysis.
+# (Points taken) However the output of the EDA above shows 70 unique start/end station IDs, and 
+# 74 unique start/end station names. This is a discrepancy worth looking into.
 

@@ -172,6 +172,7 @@ summary(CleanedWeather$cloud_cover)
 sd(CleanedWeather$cloud_cover)
 plot(CleanedWeather$date,CleanedWeather$cloud_cover, xlab="Date", ylab="Cloud Cover (Oktas)")
 
+# SK Have you checked whether there are any trips recorded during these tropical events?
 # Remove weather days that reflect days that have tropical storm level weather conditions
 HurricaneWindIndices <- which(CleanedWeather$max_wind_Speed_mph>50) # Tropical storms have winds in excess of 50 mph - https://www.weather.gov/lix/htiwind#:~:text=Hurricane%20winds%2074%20to%2090,of%20mobile%20homes%20is%20likely.
 HurricaneWinds <- CleanedWeather[HurricaneWindIndices,] #store the tropical storm indices
@@ -515,4 +516,5 @@ cor(x=test[,c(66:71)],y=test[,c(72:82)],use="pairwise.complete.obs") %>%
   corrplot(show.diag=NULL, method = "color", type="upper", mar=c(0,0,2,0),
            tl.col = "black",  cl.ratio = 0.5, cl.length=5, tl.offset=0,title = "Weather and Trip Variable Correlation")
 
-
+# Sk Good work! The report is really good, providing an overview of the data while cleanly 
+# separating data-backed evidence and possible paths of further analysis based on literature. 
